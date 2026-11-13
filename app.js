@@ -58,8 +58,10 @@
   const DIAGS = ['TEA (autismo)', 'TDAH', 'Síndrome de Down', 'Paralisia cerebral', 'Deficiência intelectual', 'Deficiência auditiva', 'Deficiência visual', 'Deficiência física', 'Síndrome rara / genética', 'Epilepsia', 'TOD', 'Transtorno de aprendizagem', 'Atraso no desenvolvimento', 'Em investigação', 'Outro'];
   const CFG0 = {
     nome: 'Instituto Luma', slogan: 'Luz para mães atípicas', lema: 'Luz que acolhe, orienta e ilumina o caminho das mães atípicas.',
-    cnpj: '', endereco: '', cidade: '', telefone: '', email: '', instagram: '', pix: '',
-    presidente: '', tesoureira: '', coordenacao: '', conselhoFiscal: '',
+    razao: 'Instituto Luma Luz para Mães Atípicas', fundacao: '2026-07-14',
+    cnpj: '68.397.401/0001-60', endereco: 'Rua Palermo, 15, Qd. 38, Conjunto Nova Cidade – Nova Cidade', cidade: 'Manaus/AM', cep: '69097-273',
+    telefone: '', email: 'lumamaesatipicas@gmail.com', instagram: '', pix: '',
+    presidente: 'Bárbara Serra Oliveira', vice: 'Virgínia Lima', tesoureira: 'Taciana Moura', coordenacao: '', conselhoFiscal: '',
     tiposAtend: ['Atendimento psicológico', 'Atendimento jurídico', 'Atendimento social', 'Acolhimento / triagem'],
     tiposGrupo: ['Círculo de Cuidado Luma', 'Oficina das Mães', 'Palestra / evento'],
     catEntrada: ['Doação de pessoa física', 'Doação de empresa', 'Contribuição de associada', 'Bazar, eventos e rifas', 'Termo de fomento / convênio', 'Emenda parlamentar / subvenção', 'Editais e prêmios', 'Rendimentos de aplicação', 'Outras receitas'],
@@ -78,6 +80,7 @@
     const b = novo();
     d = Object.assign(b, d || {});
     d.cfg = Object.assign(JSON.parse(JSON.stringify(CFG0)), d.cfg || {});
+    ['razao', 'fundacao', 'cnpj', 'endereco', 'cidade', 'cep', 'email', 'presidente', 'vice', 'tesoureira'].forEach((k) => { if (!d.cfg[k]) d.cfg[k] = CFG0[k]; });
     ['maes', 'vol', 'est', 'atend', 'grupos', 'fin', 'bens', 'obrigCustom', 'obrigOcultas', 'docs', 'docsOcultos'].forEach((k) => { if (!Array.isArray(d[k])) d[k] = []; });
     if (!d.obrig || typeof d.obrig !== 'object') d.obrig = {};
     d.seq = Object.assign({ recibo: {}, tomb: 0 }, d.seq || {});
@@ -785,9 +788,10 @@
     return head('Configurações', 'Dados que aparecem nos relatórios, listas do app, senha e cópia de segurança.') +
       `<div class="cols">
       <div class="card"><h2>Dados do instituto</h2><div class="dlg-body" style="padding:0">
-        ${inp('nome', 'Nome', 4)}${inp('cnpj', 'CNPJ', 2)}${inp('endereco', 'Endereço', 4)}${inp('cidade', 'Cidade / UF', 2)}
+        ${inp('nome', 'Nome', 4)}${inp('cnpj', 'CNPJ (usado para entrar)', 2)}${inp('razao', 'Razão social', 4)}${inp('fundacao', 'Fundação', 2, 'date')}
+        ${inp('endereco', 'Endereço', 6)}${inp('cidade', 'Cidade / UF')}${inp('cep', 'CEP')}
         ${inp('telefone', 'Telefone')}${inp('email', 'E-mail', 3, 'email')}${inp('instagram', 'Instagram')}${inp('pix', 'Chave Pix')}
-        ${inp('presidente', 'Presidente')}${inp('tesoureira', 'Tesoureira')}${inp('coordenacao', 'Coordenação técnica')}${inp('conselhoFiscal', 'Conselho fiscal (nomes)')}
+        ${inp('presidente', 'Presidente')}${inp('vice', 'Vice-presidente')}${inp('tesoureira', 'Tesoureira')}${inp('coordenacao', 'Coordenação técnica')}${inp('conselhoFiscal', 'Conselho fiscal (nomes)')}
       </div></div>
       <div class="card"><h2>Financeiro</h2><div class="dlg-body" style="padding:0">
         ${c.contas.map((k) => `<div class="fld w3"><label>Saldo inicial — ${esc(k)}</label><input data-saldo="${esc(k)}" inputmode="decimal" value="${esc(n2(c.saldoIni[k] || 0))}"></div>`).join('')}
@@ -795,8 +799,8 @@
         <div class="fld"><small>Coloque o saldo de cada conta no dia em que começou a usar o app. Os lançamentos são somados a partir dele.</small></div>
       </div>
       <h2 style="margin-top:18px">Segurança</h2>
-      <p class="muted small" style="margin-top:0">${c.pin ? 'A senha de acesso está <b>ativada</b>.' : 'Sem senha: qualquer pessoa com este aparelho abre o app.'} A senha impede que outra pessoa abra o app neste aparelho; ela não criptografa os dados.</p>
-      <div class="btns"><button class="btn" data-act="pin">${c.pin ? 'Trocar senha' : 'Criar senha de acesso'}</button>${c.pin ? '<button class="btn bad" data-act="pin-off">Remover senha</button>' : ''}</div>
+      <p class="muted small" style="margin-top:0">Para entrar no painel é preciso o CNPJ e a senha. O app bloqueia sozinho depois de 5 minutos fora da tela. A senha impede que outra pessoa abra o app neste aparelho; ela não criptografa os dados, por isso não empreste o aparelho desbloqueado.</p>
+      <div class="btns"><button class="btn" data-act="pin">Trocar senha</button></div>
       <h2 style="margin-top:18px">Cópia de segurança</h2>
       <p class="muted small" style="margin-top:0">Os dados ficam só neste aparelho. ${c.ultimoBackup ? 'Última cópia: <b>' + fmtD(c.ultimoBackup) + '</b>.' : '<b>Nenhuma cópia baixada ainda.</b>'} Para usar em outro aparelho, baixe aqui e importe lá.</p>
       <div class="btns"><button class="btn gold" data-act="backup">Baixar cópia de segurança</button><label class="btn">Importar cópia<input type="file" accept=".json,application/json" id="imp" hidden></label></div>
@@ -813,7 +817,7 @@
   /* ================= impressão ================= */
   function cabecalho() {
     const c = C();
-    return `<div class="p-head"><img src="icons/logo.png" alt=""><div><div class="n">Instituto</div><div class="s">Luma</div><div class="d">${esc(c.slogan)}${c.cnpj ? ' · CNPJ ' + esc(c.cnpj) : ''}</div><div class="d">${esc([c.endereco, c.cidade].filter(Boolean).join(' · '))}${c.telefone || c.email ? '<br>' + esc([c.telefone, c.email, c.instagram].filter(Boolean).join(' · ')) : ''}</div></div></div>`;
+    return `<div class="p-head"><img src="icons/logo.png" alt=""><div><div class="n">Instituto</div><div class="s">Luma</div><div class="d">${esc(c.slogan)}${c.cnpj ? ' · CNPJ ' + esc(c.cnpj) : ''}</div><div class="d">${esc([c.endereco, c.cidade, c.cep ? 'CEP ' + c.cep : ''].filter(Boolean).join(' · '))}${c.telefone || c.email ? '<br>' + esc([c.telefone, c.email, c.instagram].filter(Boolean).join(' · ')) : ''}</div></div></div>`;
   }
   const assin = (lista) => `<div class="assin">${lista.filter(Boolean).map(([n, c]) => `<div>${esc(n || '')}<small>${esc(c)}</small></div>`).join('')}</div>`;
   const localData = (d) => `<p style="text-align:right;margin-top:24px">${esc(C().cidade ? C().cidade.split('/')[0].trim() + ', ' : '')}${d ? toDate(d).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }) : '_____ de ______________ de ________'}.</p>`;
@@ -897,7 +901,7 @@
       const atAno = new Set([...realAno.map((a) => a.maeId), ...GA.flatMap((g) => g.presentes || [])]);
       const fe = D.fin.filter((f) => f.data.slice(0, 4) === ano);
       const E = fe.filter((f) => f.tipo === 'e').reduce((a, f) => a + (+f.valor || 0), 0); const S = fe.filter((f) => f.tipo === 's').reduce((a, f) => a + (+f.valor || 0), 0);
-      const corpo = `<h2>1. Apresentação</h2><p>O ${esc(C().nome)} — ${esc(C().slogan)} — tem como missão ser "${esc(C().lema)}" Este relatório apresenta as atividades realizadas em ${ano}: atendimentos psicológicos, jurídicos e sociais, o Círculo de Cuidado Luma (roda de conversa e compartilhamento mensal) e demais atividades em grupo.</p>
+      const corpo = `<h2>1. Apresentação</h2><p>O ${esc(C().nome)} — ${esc(C().slogan)} — ${C().fundacao ? 'fundado em ' + fmtD(C().fundacao) + ', ' : ''}tem como missão ser "${esc(C().lema)}" Este relatório apresenta as atividades realizadas em ${ano}: atendimentos psicológicos, jurídicos e sociais, o Círculo de Cuidado Luma (roda de conversa e compartilhamento mensal) e demais atividades em grupo.</p>
         <h2>2. Números do ano</h2>${kv([['Mães atendidas no ano', atAno.size], ['Novas mães cadastradas', sum((r) => r.nv)], ['Atendimentos individuais realizados', sum((r) => r.tot)], ['Encontros em grupo realizados', sum((r) => r.g)], ['Participações em grupos', sum((r) => r.p)], ['Voluntários e estagiários ativos', D.vol.filter((v) => v.situacao === 'Ativo').length + D.est.filter((v) => v.situacao === 'Ativo').length], ['Receitas do ano', brl(E)], ['Despesas do ano', brl(S)]])}
         <h2>3. Atendimentos e atividades mês a mês</h2>${ptab(['Mês', ...tipos.map((t) => [esc(t.replace('Atendimento ', '')), 'r']), ['Total', 'r'], ['Grupos', 'r'], ['Particip.', 'r'], ['Novas mães', 'r'], ['Mães atend.', 'r']], rows.map((r) => `<tr><td>${cap(r.m)}</td>${r.t.map((x) => `<td class="r">${x}</td>`).join('')}<td class="r"><b>${r.tot}</b></td><td class="r">${r.g}</td><td class="r">${r.p}</td><td class="r">${r.nv}</td><td class="r">${r.at}</td></tr>`), `<tr><td>Total</td>${tipos.map((t, i) => `<td class="r">${sum((r) => r.t[i])}</td>`).join('')}<td class="r">${sum((r) => r.tot)}</td><td class="r">${sum((r) => r.g)}</td><td class="r">${sum((r) => r.p)}</td><td class="r">${sum((r) => r.nv)}</td><td class="r">${atAno.size}</td></tr>`)}
         <h2>4. Círculo de Cuidado Luma e grupos</h2>${GA.length ? ptab(['Data', 'Atividade', 'Tema', ['Participantes', 'r']], GA.sort((a, b) => a.data.localeCompare(b.data)).map((g) => `<tr><td>${fmtD(g.data)}</td><td>${esc(g.tipo)}</td><td>${esc(g.tema)}</td><td class="r">${(g.presentes || []).length + (+g.extras || 0)}</td></tr>`)) : '<p>Nenhum encontro registrado.</p>'}
@@ -1130,6 +1134,7 @@
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   }
   async function hashPin(p) {
+    p = (C().salt || '') + ':' + p;
     try { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('luma:' + p)); return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join(''); }
     catch (e) { let h = 7; for (const ch of 'luma:' + p) h = (h * 31 + ch.charCodeAt(0)) | 0; return 'x' + h; }
   }
@@ -1175,9 +1180,15 @@
         C().ultimoBackup = hoje(); save();
         baixarArquivo('instituto-luma-copia-' + hoje() + '.json', JSON.stringify(D, null, 1), 'application/json'); render(); toast('Cópia baixada. Guarde o arquivo em local seguro.'); break;
       }
-      case 'zerar': if (confirm('Apagar TODOS os dados do instituto deste aparelho?') && prompt('Digite APAGAR para confirmar') === 'APAGAR') { D = normaliza(null); save(); render(); toast('Dados apagados'); } break;
-      case 'pin': (async () => { const p = prompt('Nova senha de acesso (mínimo 4 números ou letras):'); if (p === null) return; if (p.trim().length < 4) { toast('Senha muito curta'); return; } if (prompt('Repita a senha:') !== p) { toast('As senhas não conferem'); return; } C().pin = await hashPin(p.trim()); save(); render(); $('#btn-lock').hidden = false; toast('Senha ativada'); })(); break;
-      case 'pin-off': if (confirm('Remover a senha de acesso?')) { C().pin = ''; save(); render(); $('#btn-lock').hidden = true; } break;
+      case 'zerar': if (confirm('Apagar TODOS os dados do instituto deste aparelho?') && prompt('Digite APAGAR para confirmar') === 'APAGAR') { D = normaliza(null); save(); render(); bloquear(); } break;
+      case 'pin': (async () => {
+        const at = prompt('Digite a senha atual:'); if (at === null) return;
+        if ((await hashPin(at)) !== C().pin) { toast('Senha atual incorreta'); return; }
+        const p = prompt('Nova senha (mínimo 6 caracteres):'); if (p === null) return;
+        if (p.length < 6) { toast('A senha precisa ter pelo menos 6 caracteres'); return; }
+        if (prompt('Repita a nova senha:') !== p) { toast('As senhas não conferem'); return; }
+        C().salt = uid(); C().pin = await hashPin(p); save(); toast('Senha trocada');
+      })(); break;
     }
   });
   document.addEventListener('input', (e) => {
@@ -1197,7 +1208,8 @@
           const d = JSON.parse(r.result);
           if (!d || !Array.isArray(d.maes) || !d.cfg) throw new Error('formato');
           if (!confirm('Substituir os dados deste aparelho pela cópia de ' + (d.cfg.ultimoBackup ? fmtD(d.cfg.ultimoBackup) : 'arquivo') + '? (' + d.maes.length + ' mães, ' + (d.fin || []).length + ' lançamentos)')) return;
-          D = normaliza(d); save(); render(); toast('Cópia importada');
+          const pin = C().pin; const salt = C().salt;
+          D = normaliza(d); D.cfg.pin = pin; D.cfg.salt = salt; save(); render(); toast('Cópia importada (a senha continua a mesma)');
         } catch (err) { alert('Arquivo inválido. Escolha uma cópia de segurança do Instituto Luma (.json).'); }
       };
       r.readAsText(t.files[0]); t.value = '';
@@ -1207,18 +1219,52 @@
   /* ================= tema, bloqueio, início ================= */
   function aplicaTema() { document.documentElement.dataset.theme = C().tema === 'claro' ? 'claro' : 'escuro'; $('meta[name="theme-color"]').content = C().tema === 'claro' ? '#f7f3ea' : '#0b0b0c'; }
   $('#btn-tema').onclick = () => { C().tema = C().tema === 'claro' ? 'escuro' : 'claro'; save(); aplicaTema(); };
-  function bloquear() { if (!C().pin) return; $('#lock').hidden = false; $('#lock-pin').value = ''; $('#lock-err').textContent = ''; setTimeout(() => $('#lock-pin').focus(), 50); }
+  const soDig = (s) => String(s || '').replace(/\D/g, '');
+  function mascaraCnpj(v) { const d = soDig(v).slice(0, 14); let o = ''; for (let i = 0; i < d.length; i++) { if (i === 2 || i === 5) o += '.'; if (i === 8) o += '/'; if (i === 12) o += '-'; o += d[i]; } return o; }
+  let erros = 0; let esperaAte = 0;
+  function bloquear() {
+    const novo = !C().pin;
+    if ($('#dlg').open) $('#dlg').close();
+    $('#lock').hidden = false; document.body.style.overflow = 'hidden';
+    $('#lock-novo').hidden = !novo;
+    $('#lock-esqueci').hidden = novo;
+    $('#lock-sub').textContent = novo ? 'Primeiro acesso: confirme o CNPJ e crie a senha' : 'Painel administrativo';
+    $('#lock-btn').textContent = novo ? 'Criar senha e entrar' : 'Entrar';
+    $('#lock-pin').autocomplete = novo ? 'new-password' : 'current-password';
+    $('#lock-pin').value = ''; $('#lock-pin2').value = ''; $('#lock-err').textContent = '';
+    setTimeout(() => ($('#lock-cnpj').value ? $('#lock-pin') : $('#lock-cnpj')).focus(), 50);
+  }
+  function liberar() { $('#lock').hidden = true; document.body.style.overflow = ''; $('#lock-pin').value = ''; $('#lock-pin2').value = ''; erros = 0; render(); }
   $('#btn-lock').onclick = bloquear;
-  $('#lock-form').onsubmit = async (e) => { e.preventDefault(); const h = await hashPin($('#lock-pin').value.trim()); if (h === C().pin) { $('#lock').hidden = true; } else { $('#lock-err').textContent = 'Senha incorreta'; $('#lock-pin').value = ''; } };
+  $('#lock-cnpj').addEventListener('input', (e) => { e.target.value = mascaraCnpj(e.target.value); });
+  $('#lock-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const err = (t) => { $('#lock-err').textContent = t; };
+    if (Date.now() < esperaAte) { err('Muitas tentativas. Aguarde ' + Math.ceil((esperaAte - Date.now()) / 1000) + ' segundos.'); return; }
+    const p = $('#lock-pin').value;
+    if (soDig($('#lock-cnpj').value) !== soDig(C().cnpj)) { err('CNPJ não confere com o do instituto.'); return; }
+    if (!C().pin) {
+      if (p.length < 6) { err('A senha precisa ter pelo menos 6 caracteres.'); return; }
+      if (p !== $('#lock-pin2').value) { err('As senhas não conferem.'); return; }
+      C().salt = uid(); C().pin = await hashPin(p); save(); liberar(); toast('Senha criada. Guarde-a em local seguro.'); return;
+    }
+    if ((await hashPin(p)) === C().pin) { liberar(); return; }
+    erros++; $('#lock-pin').value = '';
+    if (erros >= 5) { esperaAte = Date.now() + 30000; erros = 0; err('Senha incorreta 5 vezes. Aguarde 30 segundos.'); } else err('Senha incorreta.');
+  };
+  $('#lock-esqueci').onclick = () => {
+    if (!confirm('Por segurança, a senha não pode ser recuperada.\n\nPara criar uma senha nova, é preciso APAGAR os dados deste aparelho e depois importar a última cópia de segurança (Configurações → Importar cópia).\n\nContinuar?')) return;
+    if (prompt('Digite APAGAR para confirmar') !== 'APAGAR') return;
+    D = normaliza(null); save(); bloquear();
+  };
   let escondidoEm = 0;
   document.addEventListener('visibilitychange', () => { if (document.hidden) escondidoEm = Date.now(); else if (escondidoEm && Date.now() - escondidoEm > 5 * 60 * 1000) bloquear(); });
   window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (h && h !== UI.tab) go(h); });
 
   aplicaTema();
-  $('#btn-lock').hidden = !C().pin;
   UI.tab = TABS.some((t) => t.id === location.hash.slice(1)) ? location.hash.slice(1) : 'painel';
   render();
-  if (C().pin) bloquear();
+  bloquear();
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
   window.LUMA = { get D() { return D; }, REP, render, save, extenso };
 })();

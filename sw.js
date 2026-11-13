@@ -1,6 +1,6 @@
 // Guarda o app do Instituto Luma no aparelho para abrir mesmo sem internet.
 // Ao publicar uma versão nova, troque o número de VERSAO para o aparelho atualizar.
-const VERSAO = 'luma-gestao-v1';
+const VERSAO = 'luma-gestao-v2';
 const ARQUIVOS = ['./', 'index.html', 'app.js', 'obrigacoes.js', 'manifest.webmanifest', 'icons/logo.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {
