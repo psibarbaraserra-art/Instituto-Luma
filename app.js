@@ -62,7 +62,7 @@
     cnpj: '68.397.401/0001-60', endereco: 'Rua Palermo, 15, Qd. 38, Conjunto Nova Cidade – Nova Cidade', cidade: 'Manaus/AM', cep: '69097-273',
     telefone: '', email: 'lumamaesatipicas@gmail.com', instagram: '', pix: '',
     presidente: 'Bárbara Serra Oliveira', vice: 'Virgínia Lima', tesoureira: 'Taciana Moura',
-    presidenteProf: 'Psicóloga · CRP 20/13.134', viceProf: 'Psicóloga · CRP 20/13.072', tesoureiraProf: 'Assistente social', coordenacao: '', conselhoFiscal: '',
+    presidenteProf: 'Psicóloga · CRP 20/13.134', viceProf: 'Psicóloga · CRP 20/13.072', tesoureiraProf: 'Assistente social · CRESS/AM 10.801', coordenacao: '', conselhoFiscal: '',
     tiposAtend: ['Atendimento psicológico', 'Atendimento jurídico', 'Atendimento social', 'Acolhimento / triagem'],
     tiposGrupo: ['Círculo de Cuidado Luma', 'Oficina das Mães', 'Palestra / evento'],
     catEntrada: ['Doação de pessoa física', 'Doação de empresa', 'Contribuição de associada', 'Bazar, eventos e rifas', 'Termo de fomento / convênio', 'Emenda parlamentar / subvenção', 'Editais e prêmios', 'Rendimentos de aplicação', 'Outras receitas'],
@@ -82,6 +82,7 @@
     d = Object.assign(b, d || {});
     d.cfg = Object.assign(JSON.parse(JSON.stringify(CFG0)), d.cfg || {});
     ['razao', 'fundacao', 'cnpj', 'endereco', 'cidade', 'cep', 'email', 'presidente', 'vice', 'tesoureira', 'presidenteProf', 'viceProf', 'tesoureiraProf'].forEach((k) => { if (!d.cfg[k]) d.cfg[k] = CFG0[k]; });
+    if (d.cfg.tesoureiraProf === 'Assistente social') d.cfg.tesoureiraProf = CFG0.tesoureiraProf;
     ['maes', 'vol', 'est', 'atend', 'grupos', 'fin', 'bens', 'obrigCustom', 'obrigOcultas', 'docs', 'docsOcultos'].forEach((k) => { if (!Array.isArray(d[k])) d[k] = []; });
     if (!d.obrig || typeof d.obrig !== 'object') d.obrig = {};
     d.seq = Object.assign({ recibo: {}, tomb: 0 }, d.seq || {});
