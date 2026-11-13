@@ -219,6 +219,17 @@ dialog#dlg::backdrop { background: rgba(0, 0, 0, .65); }
 .pres label:last-child { border-bottom: 0; }
 .pres input { accent-color: var(--gold); width: 18px; height: 18px; }
 
+/* diretoria */
+.dir { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; }
+.dir-p { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; }
+.dir-p img { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold); padding: 3px; background: var(--surface); margin-bottom: 8px; }
+.dir-p b { font-size: 15px; }
+.dir-c { color: var(--gold-2); font-size: 13px; font-weight: 600; }
+.dir-r { color: var(--muted); font-size: 12.5px; }
+#print .p-dir { display: flex; justify-content: space-around; gap: 12px; margin: 8px 0 4px; }
+#print .p-dir .dir-p img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 1.5px solid #b8952f; margin-bottom: 4px; }
+#print .p-dir .dir-p { font-size: 9pt; }
+#print .p-dir .dir-c, #print .p-dir .dir-r { font-size: 8.5pt; color: #555 !important; }
 /* bloqueio */
 #lock { position: fixed; inset: 0; z-index: 100; background: var(--bg); display: grid; place-items: center; padding: 24px; }
 #lock .box { text-align: center; max-width: 340px; width: 100%; }
@@ -324,7 +335,7 @@ footer.foot .lema { font-family: var(--font-script); font-size: 24px; color: var
 <div id="toast" role="status"></div>
 <div id="print"></div>
 
-<script src="obrigacoes.js?v=3"></script>
-<script src="app.js?v=3"></script>
+<script src="obrigacoes.js?v=4"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

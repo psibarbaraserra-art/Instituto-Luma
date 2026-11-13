@@ -61,7 +61,8 @@
     razao: 'Instituto Luma Luz para Mães Atípicas', fundacao: '2026-07-14',
     cnpj: '68.397.401/0001-60', endereco: 'Rua Palermo, 15, Qd. 38, Conjunto Nova Cidade – Nova Cidade', cidade: 'Manaus/AM', cep: '69097-273',
     telefone: '', email: 'lumamaesatipicas@gmail.com', instagram: '', pix: '',
-    presidente: 'Bárbara Serra Oliveira', vice: 'Virgínia Lima', tesoureira: 'Taciana Moura', coordenacao: '', conselhoFiscal: '',
+    presidente: 'Bárbara Serra Oliveira', vice: 'Virgínia Lima', tesoureira: 'Taciana Moura',
+    presidenteProf: 'Psicóloga · CRP 20/13.134', viceProf: 'Psicóloga · CRP 20/13.072', tesoureiraProf: 'Assistente social', coordenacao: '', conselhoFiscal: '',
     tiposAtend: ['Atendimento psicológico', 'Atendimento jurídico', 'Atendimento social', 'Acolhimento / triagem'],
     tiposGrupo: ['Círculo de Cuidado Luma', 'Oficina das Mães', 'Palestra / evento'],
     catEntrada: ['Doação de pessoa física', 'Doação de empresa', 'Contribuição de associada', 'Bazar, eventos e rifas', 'Termo de fomento / convênio', 'Emenda parlamentar / subvenção', 'Editais e prêmios', 'Rendimentos de aplicação', 'Outras receitas'],
@@ -80,7 +81,7 @@
     const b = novo();
     d = Object.assign(b, d || {});
     d.cfg = Object.assign(JSON.parse(JSON.stringify(CFG0)), d.cfg || {});
-    ['razao', 'fundacao', 'cnpj', 'endereco', 'cidade', 'cep', 'email', 'presidente', 'vice', 'tesoureira'].forEach((k) => { if (!d.cfg[k]) d.cfg[k] = CFG0[k]; });
+    ['razao', 'fundacao', 'cnpj', 'endereco', 'cidade', 'cep', 'email', 'presidente', 'vice', 'tesoureira', 'presidenteProf', 'viceProf', 'tesoureiraProf'].forEach((k) => { if (!d.cfg[k]) d.cfg[k] = CFG0[k]; });
     ['maes', 'vol', 'est', 'atend', 'grupos', 'fin', 'bens', 'obrigCustom', 'obrigOcultas', 'docs', 'docsOcultos'].forEach((k) => { if (!Array.isArray(d[k])) d[k] = []; });
     if (!d.obrig || typeof d.obrig !== 'object') d.obrig = {};
     d.seq = Object.assign({ recibo: {}, tomb: 0 }, d.seq || {});
@@ -531,6 +532,7 @@
         <div class="kpi"><div class="l">Saldo atual</div><div class="v${saldoAtual() < 0 ? ' neg' : ''}">${brl(saldoAtual())}</div><div class="s">Mês: +${brl(r.e)} / −${brl(r.s)}</div></div>
         <div class="kpi"><div class="l">Equipe ativa</div><div class="v">${D.vol.filter((v) => v.situacao === 'Ativo').length + D.est.filter((e) => e.situacao === 'Ativo').length}</div><div class="s">${D.vol.filter((v) => v.situacao === 'Ativo').length} voluntário(s) · ${D.est.filter((e) => e.situacao === 'Ativo').length} estagiário(s)</div></div>
       </div>
+      <div class="card dir-card" style="margin-bottom:16px"><h2>Diretoria <small>${esc(C().razao || C().nome)}</small></h2>${dirHTML('dir')}</div>
       <div class="cols">
         <div class="card"><h2>Pendências <small>${P.length ? P.length + ' item(ns)' : ''}</small></h2>
           <div class="list">${P.length ? P.slice(0, 14).map((p, i) => `<button class="alert ${p.n}" data-pend="${i}"><span class="dot"></span><span>${esc(p.t)}</span></button>`).join('') : '<div class="empty"><b>Tudo em dia ✨</b>Nenhuma pendência encontrada.</div>'}</div></div>
@@ -791,7 +793,7 @@
         ${inp('nome', 'Nome', 4)}${inp('cnpj', 'CNPJ (usado para entrar)', 2)}${inp('razao', 'Razão social', 4)}${inp('fundacao', 'Fundação', 2, 'date')}
         ${inp('endereco', 'Endereço', 6)}${inp('cidade', 'Cidade / UF')}${inp('cep', 'CEP')}
         ${inp('telefone', 'Telefone')}${inp('email', 'E-mail', 3, 'email')}${inp('instagram', 'Instagram')}${inp('pix', 'Chave Pix')}
-        ${inp('presidente', 'Presidente')}${inp('vice', 'Vice-presidente')}${inp('tesoureira', 'Tesoureira')}${inp('coordenacao', 'Coordenação técnica')}${inp('conselhoFiscal', 'Conselho fiscal (nomes)')}
+        ${inp('presidente', 'Presidente')}${inp('presidenteProf', 'Presidente: profissão e registro')}${inp('vice', 'Vice-presidente')}${inp('viceProf', 'Vice: profissão e registro')}${inp('tesoureira', 'Tesoureira')}${inp('tesoureiraProf', 'Tesoureira: profissão e registro')}${inp('coordenacao', 'Coordenação técnica')}${inp('conselhoFiscal', 'Conselho fiscal (nomes)')}
       </div></div>
       <div class="card"><h2>Financeiro</h2><div class="dlg-body" style="padding:0">
         ${c.contas.map((k) => `<div class="fld w3"><label>Saldo inicial — ${esc(k)}</label><input data-saldo="${esc(k)}" inputmode="decimal" value="${esc(n2(c.saldoIni[k] || 0))}"></div>`).join('')}
@@ -824,6 +826,15 @@
   const kv = (pares) => `<div class="kv">${pares.map(([k, v, full]) => `<div${full ? ' class="full"' : ''}><b>${esc(k)}</b>${v === undefined || v === '' || v === null ? '' : esc(v)}</div>`).join('')}</div>`;
   const ptab = (cab, linhas, rodape) => `<table><thead><tr>${cab.map((h) => (Array.isArray(h) ? `<th class="${h[1]}">${h[0]}</th>` : `<th>${h}</th>`)).join('')}</tr></thead><tbody>${linhas.join('')}</tbody>${rodape ? `<tfoot>${rodape}</tfoot>` : ''}</table>`;
   const pres = () => C().presidente; const tes = () => C().tesoureira;
+  const SP = () => [pres(), 'Presidente' + (C().presidenteProf ? ' · ' + C().presidenteProf : '')];
+  const SV = () => [C().vice, 'Vice-presidente' + (C().viceProf ? ' · ' + C().viceProf : '')];
+  const ST = () => [tes(), 'Tesoureira' + (C().tesoureiraProf ? ' · ' + C().tesoureiraProf : '')];
+  const DIRETORIA = () => [
+    { cargo: 'Presidente e fundadora', nome: C().presidente, prof: C().presidenteProf, foto: 'equipe/barbara.jpg' },
+    { cargo: 'Vice-presidente', nome: C().vice, prof: C().viceProf, foto: 'equipe/virginia.jpg' },
+    { cargo: 'Tesoureira', nome: C().tesoureira, prof: C().tesoureiraProf, foto: 'equipe/taciana.jpg' }
+  ].filter((p) => p.nome);
+  const dirHTML = (cls) => `<div class="${cls}">${DIRETORIA().map((p) => `<div class="dir-p"><img src="${p.foto}" alt="${esc(p.nome)}" onerror="this.style.visibility='hidden'"><b>${esc(p.nome)}</b><span class="dir-c">${esc(p.cargo)}</span><span class="dir-r">${esc(p.prof || '')}</span></div>`).join('')}</div>`;
   function imprimir(titulo, corpo, opt) {
     opt = opt || {};
     const p = $('#print');
@@ -883,7 +894,7 @@
         <h2>5. Resumo financeiro</h2>${ptab(['Saldo anterior', ['Entradas', 'r'], ['Saídas', 'r'], ['Saldo final', 'r']], [`<tr><td>${brl(r.ini)}</td><td class="r">${brl(r.e)}</td><td class="r">${brl(r.s)}</td><td class="r"><b>${brl(r.fim)}</b></td></tr>`])}<p class="mini">Detalhamento no balancete mensal.</p>
         <h2>6. Obrigações administrativas</h2><p>${cntSt('feito')} concluída(s), ${cntSt('na')} não se aplica(m), ${cntSt('atrasada') + cntSt('pendente') + cntSt('proxima')} pendente(s).</p>${ms.filter((x) => ['atrasada', 'pendente', 'proxima'].includes(x.st.s)).length ? '<p class="mini"><b>Pendentes:</b> ' + ms.filter((x) => ['atrasada', 'pendente', 'proxima'].includes(x.st.s)).map((x) => esc(x.o.titulo)).join('; ') + '.</p>' : ''}
         <h2>7. Observações</h2><div class="linhas">${'<div></div>'.repeat(5)}</div>
-        ${localData()}${assin([[pres(), 'Presidente'], [C().coordenacao, 'Coordenação técnica']])}`;
+        ${localData()}${assin([SP(), [C().coordenacao, 'Coordenação técnica']])}`;
       imprimir('Relatório mensal de atividades', corpo, { sub: mesNome(ym) });
     },
     anual() {
@@ -902,11 +913,12 @@
       const fe = D.fin.filter((f) => f.data.slice(0, 4) === ano);
       const E = fe.filter((f) => f.tipo === 'e').reduce((a, f) => a + (+f.valor || 0), 0); const S = fe.filter((f) => f.tipo === 's').reduce((a, f) => a + (+f.valor || 0), 0);
       const corpo = `<h2>1. Apresentação</h2><p>O ${esc(C().nome)} — ${esc(C().slogan)} — ${C().fundacao ? 'fundado em ' + fmtD(C().fundacao) + ', ' : ''}tem como missão ser "${esc(C().lema)}" Este relatório apresenta as atividades realizadas em ${ano}: atendimentos psicológicos, jurídicos e sociais, o Círculo de Cuidado Luma (roda de conversa e compartilhamento mensal) e demais atividades em grupo.</p>
+        <h2>Diretoria</h2>${dirHTML('p-dir')}
         <h2>2. Números do ano</h2>${kv([['Mães atendidas no ano', atAno.size], ['Novas mães cadastradas', sum((r) => r.nv)], ['Atendimentos individuais realizados', sum((r) => r.tot)], ['Encontros em grupo realizados', sum((r) => r.g)], ['Participações em grupos', sum((r) => r.p)], ['Voluntários e estagiários ativos', D.vol.filter((v) => v.situacao === 'Ativo').length + D.est.filter((v) => v.situacao === 'Ativo').length], ['Receitas do ano', brl(E)], ['Despesas do ano', brl(S)]])}
         <h2>3. Atendimentos e atividades mês a mês</h2>${ptab(['Mês', ...tipos.map((t) => [esc(t.replace('Atendimento ', '')), 'r']), ['Total', 'r'], ['Grupos', 'r'], ['Particip.', 'r'], ['Novas mães', 'r'], ['Mães atend.', 'r']], rows.map((r) => `<tr><td>${cap(r.m)}</td>${r.t.map((x) => `<td class="r">${x}</td>`).join('')}<td class="r"><b>${r.tot}</b></td><td class="r">${r.g}</td><td class="r">${r.p}</td><td class="r">${r.nv}</td><td class="r">${r.at}</td></tr>`), `<tr><td>Total</td>${tipos.map((t, i) => `<td class="r">${sum((r) => r.t[i])}</td>`).join('')}<td class="r">${sum((r) => r.tot)}</td><td class="r">${sum((r) => r.g)}</td><td class="r">${sum((r) => r.p)}</td><td class="r">${sum((r) => r.nv)}</td><td class="r">${atAno.size}</td></tr>`)}
         <h2>4. Círculo de Cuidado Luma e grupos</h2>${GA.length ? ptab(['Data', 'Atividade', 'Tema', ['Participantes', 'r']], GA.sort((a, b) => a.data.localeCompare(b.data)).map((g) => `<tr><td>${fmtD(g.data)}</td><td>${esc(g.tipo)}</td><td>${esc(g.tema)}</td><td class="r">${(g.presentes || []).length + (+g.extras || 0)}</td></tr>`)) : '<p>Nenhum encontro registrado.</p>'}
         <h2>5. Considerações e metas para o próximo ano</h2><div class="linhas">${'<div></div>'.repeat(7)}</div>
-        ${localData()}${assin([[pres(), 'Presidente'], [C().coordenacao, 'Coordenação técnica']])}`;
+        ${localData()}${assin([SP(), SV(), ST()])}`;
       imprimir('Relatório anual de atividades', corpo, { sub: 'Exercício de ' + ano, paisagem: tipos.length > 4 });
     },
     perfil() {
@@ -938,14 +950,14 @@
         <h2>Resultado</h2>${kv([['Receitas', brl(r.e)], ['Despesas', brl(r.s)], [r.e - r.s >= 0 ? 'Superávit do mês' : 'Déficit do mês', brl(r.e - r.s)], ['Saldo disponível em ' + fmtD(fimMes(ym)), brl(r.fim)]])}
         ${Object.keys(fontes).length > 1 ? '<h2>Por fonte de recurso</h2>' + ptab(['Fonte / projeto', ['Entradas', 'r'], ['Saídas', 'r']], Object.entries(fontes).map(([k, v]) => `<tr><td>${esc(k)}</td><td class="r">${brl(v.e)}</td><td class="r">${brl(v.s)}</td></tr>`)) : ''}
         <p class="mini">Lançamentos sem comprovante arquivado: ${r.L.filter((f) => !f.comprovante).length}.</p>
-        ${localData()}${assin([[tes(), 'Tesouraria'], [pres(), 'Presidente'], [C().conselhoFiscal, 'Conselho Fiscal']])}`;
+        ${localData()}${assin([ST(), SP(), [C().conselhoFiscal, 'Conselho Fiscal']])}`;
       imprimir('Balancete mensal', corpo, { sub: mesNome(ym) });
     },
     caixa() {
       const ym = ($('#r-mes-c') || {}).value || ymAdd(ymHoje(), -1);
       const r = resumoMes(ym); let s = r.ini;
       const linhas = r.L.slice().sort(finSort).map((f) => { s += sinal(f); return `<tr><td>${fmtD(f.data)}</td><td>${esc(f.desc)}${f.pessoa ? '<br><span class="mini">' + esc(f.pessoa) + '</span>' : ''}</td><td>${esc(f.cat)}</td><td>${esc(f.docNum || '')}${f.comprovante ? '' : ' <i>(s/ comprov.)</i>'}</td><td>${esc(f.conta)}</td><td class="r">${f.tipo === 'e' ? n2(f.valor) : ''}</td><td class="r">${f.tipo === 's' ? n2(f.valor) : ''}</td><td class="r">${n2(s)}</td></tr>`; });
-      const corpo = ptab(['Data', 'Histórico', 'Categoria', 'Doc.', 'Conta', ['Entrada', 'r'], ['Saída', 'r'], ['Saldo', 'r']], [`<tr class="tot"><td>${fmtD(ym + '-01')}</td><td colspan="6">Saldo anterior</td><td class="r">${n2(r.ini)}</td></tr>`, ...linhas], `<tr><td colspan="5">Totais do mês</td><td class="r">${n2(r.e)}</td><td class="r">${n2(r.s)}</td><td class="r">${n2(r.fim)}</td></tr>`) + `<p class="mini">Valores em reais (R$).</p>` + assin([[tes(), 'Tesouraria'], [pres(), 'Presidente']]);
+      const corpo = ptab(['Data', 'Histórico', 'Categoria', 'Doc.', 'Conta', ['Entrada', 'r'], ['Saída', 'r'], ['Saldo', 'r']], [`<tr class="tot"><td>${fmtD(ym + '-01')}</td><td colspan="6">Saldo anterior</td><td class="r">${n2(r.ini)}</td></tr>`, ...linhas], `<tr><td colspan="5">Totais do mês</td><td class="r">${n2(r.e)}</td><td class="r">${n2(r.s)}</td><td class="r">${n2(r.fim)}</td></tr>`) + `<p class="mini">Valores em reais (R$).</p>` + assin([ST(), SP()]);
       imprimir('Livro caixa', corpo, { sub: mesNome(ym), paisagem: true });
     },
     'fin-anual'() {
@@ -961,7 +973,7 @@
         <h2>Despesas por categoria</h2>${ptab(['Categoria', ['Valor', 'r'], ['%', 'r']], cs.map(([k, v]) => `<tr><td>${esc(k)}</td><td class="r">${brl(v)}</td><td class="r">${S ? Math.round((v / S) * 100) : 0}%</td></tr>`), `<tr><td>Total</td><td class="r">${brl(S)}</td><td></td></tr>`)}
         <h2>Mês a mês</h2>${ptab(['Mês', ['Receitas', 'r'], ['Despesas', 'r'], ['Resultado', 'r'], ['Saldo acumulado', 'r']], meses, `<tr><td>Total</td><td class="r">${brl(E)}</td><td class="r">${brl(S)}</td><td class="r">${brl(E - S)}</td><td class="r">${brl(ini + E - S)}</td></tr>`)}
         <p class="mini">Demonstrativo gerencial. As demonstrações contábeis oficiais (ITG 2002) são elaboradas pelo contador.</p>
-        ${localData()}${assin([[tes(), 'Tesouraria'], [pres(), 'Presidente'], [C().conselhoFiscal, 'Conselho Fiscal']])}`;
+        ${localData()}${assin([ST(), SP(), [C().conselhoFiscal, 'Conselho Fiscal']])}`;
       imprimir('Demonstrativo financeiro anual', corpo, { sub: 'Exercício de ' + ano });
     },
     'maes-lista'() {
@@ -982,7 +994,7 @@
       const tot = B.reduce((a, b) => a + (+b.valor || 0) * (+b.qtd || 1), 0);
       const corpo = ptab(['Nº', 'Descrição', 'Categoria', ['Qtd', 'r'], 'Local', 'Estado', 'Origem', 'Entrada', ['Valor', 'r']], B.map((b) => `<tr><td>${esc(b.tomb)}</td><td>${esc(b.desc)}${b.marca ? '<br><span class="mini">' + esc(b.marca) + '</span>' : ''}</td><td>${esc(b.cat)}</td><td class="r">${+b.qtd || 1}</td><td>${esc(b.local)}</td><td>${esc(b.estado)}</td><td>${esc(b.origem)}${b.doador ? ' – ' + esc(b.doador) : ''}</td><td>${fmtD(b.data)}</td><td class="r">${b.valor ? n2((+b.valor || 0) * (+b.qtd || 1)) : ''}</td></tr>`), `<tr><td colspan="3">Total de itens</td><td class="r">${B.reduce((a, b) => a + (+b.qtd || 1), 0)}</td><td colspan="4">Valor total estimado (R$)</td><td class="r">${n2(tot)}</td></tr>`) +
         (X.length ? '<h2>Bens baixados</h2>' + ptab(['Nº', 'Descrição', 'Data da baixa', 'Motivo'], X.map((b) => `<tr><td>${esc(b.tomb)}</td><td>${esc(b.desc)}</td><td>${fmtD(b.baixaData)}</td><td>${esc(b.baixaMotivo)}</td></tr>`)) : '') +
-        `<h2>Termo de conferência</h2><p>Declaramos que os bens relacionados acima, pertencentes ao ${esc(C().nome)}, foram conferidos fisicamente em ____/____/________, encontrando-se nos locais e estados indicados.</p>${localData()}${assin([[pres(), 'Presidente'], [tes(), 'Tesouraria'], [C().conselhoFiscal, 'Conselho Fiscal']])}`;
+        `<h2>Termo de conferência</h2><p>Declaramos que os bens relacionados acima, pertencentes ao ${esc(C().nome)}, foram conferidos fisicamente em ____/____/________, encontrando-se nos locais e estados indicados.</p>${localData()}${assin([SP(), ST(), [C().conselhoFiscal, 'Conselho Fiscal']])}`;
       imprimir('Inventário patrimonial', corpo, { sub: 'Posição em ' + fmtD(hoje()), paisagem: true });
     },
     obrig() {
@@ -990,7 +1002,7 @@
       const linha = (o, key, pz) => { const s = obStatus(key, pz); const r = D.obrig[key] || {}; return `<tr><td><span class="ck">${s.s === 'feito' ? '✓' : s.s === 'na' ? '–' : ''}</span></td><td>${esc(o.titulo)}${o.cond ? ' <i class="mini">(' + esc(o.cond) + ')</i>' : ''}</td><td>${esc(o.area)}</td><td>${fmtD(pz)}</td><td>${esc(s.t)}${r.obs ? '<br><span class="mini">' + esc(r.obs) + '</span>' : ''}</td></tr>`; };
       const M = obrigLista('m').map((o) => [o, 'm:' + ym + ':' + o.id, prazoMensal(o, ym)]).sort((a, b) => a[2].localeCompare(b[2]));
       const A = obrigLista('a').map((o) => [o, 'a:' + ano + ':' + o.id, prazoAnual(o, ano)]).sort((a, b) => a[2].localeCompare(b[2]));
-      const corpo = `<h2>Mensais · ${mesNome(ym)}</h2>${ptab(['', 'Obrigação', 'Área', 'Prazo', 'Situação'], M.map((x) => linha(...x)))}<h2 class="brk">Anuais · ${ano}</h2>${ptab(['', 'Obrigação', 'Área', 'Prazo', 'Situação'], A.map((x) => linha(...x)))}${assin([[pres(), 'Presidente'], [tes(), 'Tesouraria']])}`;
+      const corpo = `<h2>Mensais · ${mesNome(ym)}</h2>${ptab(['', 'Obrigação', 'Área', 'Prazo', 'Situação'], M.map((x) => linha(...x)))}<h2 class="brk">Anuais · ${ano}</h2>${ptab(['', 'Obrigação', 'Área', 'Prazo', 'Situação'], A.map((x) => linha(...x)))}${assin([SP(), ST()])}`;
       imprimir('Checklist de obrigações', corpo, { sub: mesNome(ym) });
     },
     'docs-sit'() {
@@ -1021,7 +1033,7 @@
       const via = (n) => `<div class="recibo"><span class="val">${brl(f.valor)}</span><h1 style="text-align:left;margin:0 0 10px">Recibo de doação nº ${esc(f.reciboNum)}</h1>
         <p>Recebemos de <b>${esc(f.pessoa || '______________________________________')}</b>${f.pessoaDoc ? ', CPF/CNPJ ' + esc(f.pessoaDoc) : ', CPF/CNPJ ____________________'}, a importância de <b>${brl(f.valor)}</b> (${esc(extenso(f.valor))}), referente a <b>${esc(f.desc)}</b>${f.forma ? ', recebida via ' + esc(f.forma.toLowerCase()) : ''}, em ${fmtD(f.data)}.</p>
         <p>O valor será aplicado integralmente nas finalidades estatutárias do ${esc(C().nome)}, entidade sem fins lucrativos${C().cnpj ? ', CNPJ ' + esc(C().cnpj) : ''}. Agradecemos por ser luz no caminho das mães atípicas.</p>
-        ${localData(f.data)}${assin([[tes() || pres(), (tes() ? 'Tesouraria' : 'Presidente') + ' · ' + C().nome]])}<p class="mini" style="text-align:right">${n}</p></div>`;
+        ${localData(f.data)}${assin([ST()])}<p class="mini" style="text-align:right">${n}</p></div>`;
       const corpo = via('1ª via – doador(a)') + '<div class="corte">✂ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>' + cabecalho() + via('2ª via – instituto');
       imprimir('Recibo de doação ' + f.reciboNum, corpo, { semTitulo: true });
       render();
@@ -1065,12 +1077,12 @@
     },
     'vol-decl'(id) {
       const v = byId('vol', id); if (!v) return;
-      const corpo = `<p style="margin-top:30px;line-height:1.9">Declaramos, para os devidos fins, que <b>${esc(v.nome)}</b>${v.cpf ? ', CPF ' + esc(v.cpf) : ''}, ${v.situacao === 'Ativo' ? 'atua' : 'atuou'} como voluntário(a) no <b>${esc(C().nome)}</b>${C().cnpj ? ', CNPJ ' + esc(C().cnpj) : ''}, na área de <b>${esc(v.area || '—')}</b>${v.funcao ? ', realizando ' + esc(v.funcao) : ''}, ${v.inicio ? 'desde ' + fmtD(v.inicio) : ''}${v.fim ? ' até ' + fmtD(v.fim) : ''}${v.horasMes ? ', com carga média de ' + esc(v.horasMes) + ' horas mensais' : ''}, nos termos da Lei nº 9.608/1998, sem vínculo empregatício.</p><p style="line-height:1.9">Agradecemos a dedicação e o cuidado com as mães atípicas e suas famílias.</p>${localData(hoje())}${assin([[pres(), 'Presidente']])}`;
+      const corpo = `<p style="margin-top:30px;line-height:1.9">Declaramos, para os devidos fins, que <b>${esc(v.nome)}</b>${v.cpf ? ', CPF ' + esc(v.cpf) : ''}, ${v.situacao === 'Ativo' ? 'atua' : 'atuou'} como voluntário(a) no <b>${esc(C().nome)}</b>${C().cnpj ? ', CNPJ ' + esc(C().cnpj) : ''}, na área de <b>${esc(v.area || '—')}</b>${v.funcao ? ', realizando ' + esc(v.funcao) : ''}, ${v.inicio ? 'desde ' + fmtD(v.inicio) : ''}${v.fim ? ' até ' + fmtD(v.fim) : ''}${v.horasMes ? ', com carga média de ' + esc(v.horasMes) + ' horas mensais' : ''}, nos termos da Lei nº 9.608/1998, sem vínculo empregatício.</p><p style="line-height:1.9">Agradecemos a dedicação e o cuidado com as mães atípicas e suas famílias.</p>${localData(hoje())}${assin([SP()])}`;
       imprimir('Declaração de voluntariado', corpo);
     },
     'est-decl'(id) {
       const v = byId('est', id); if (!v) return;
-      const corpo = `<p style="margin-top:30px;line-height:1.9">Declaramos, para os devidos fins, que <b>${esc(v.nome)}</b>${v.cpf ? ', CPF ' + esc(v.cpf) : ''}, estudante do curso de <b>${esc(v.curso || '—')}</b>${v.semestre ? ' (' + esc(v.semestre) + 'º período)' : ''} da <b>${esc(v.instituicao || '—')}</b>${v.matricula ? ', matrícula ' + esc(v.matricula) : ''}, ${v.situacao === 'Ativo' ? 'realiza' : 'realizou'} estágio ${esc((v.tipoEst || '').toLowerCase())} no <b>${esc(C().nome)}</b>${C().cnpj ? ', CNPJ ' + esc(C().cnpj) : ''}, na área de ${esc(v.area || '—')}, no período de ${fmtD(v.inicio) || '___'} a ${fmtD(v.fim) || '___'}${v.cargaSemanal ? ', com carga horária de ' + esc(v.cargaSemanal) + ' horas semanais' : ''}, sob supervisão de ${esc(v.supervisor || '—')}${v.supervisorReg ? ' (' + esc(v.supervisorReg) + ')' : ''}, conforme a Lei nº 11.788/2008.</p>${localData(hoje())}${assin([[v.supervisor, 'Supervisor(a) de estágio'], [pres(), 'Presidente']])}`;
+      const corpo = `<p style="margin-top:30px;line-height:1.9">Declaramos, para os devidos fins, que <b>${esc(v.nome)}</b>${v.cpf ? ', CPF ' + esc(v.cpf) : ''}, estudante do curso de <b>${esc(v.curso || '—')}</b>${v.semestre ? ' (' + esc(v.semestre) + 'º período)' : ''} da <b>${esc(v.instituicao || '—')}</b>${v.matricula ? ', matrícula ' + esc(v.matricula) : ''}, ${v.situacao === 'Ativo' ? 'realiza' : 'realizou'} estágio ${esc((v.tipoEst || '').toLowerCase())} no <b>${esc(C().nome)}</b>${C().cnpj ? ', CNPJ ' + esc(C().cnpj) : ''}, na área de ${esc(v.area || '—')}, no período de ${fmtD(v.inicio) || '___'} a ${fmtD(v.fim) || '___'}${v.cargaSemanal ? ', com carga horária de ' + esc(v.cargaSemanal) + ' horas semanais' : ''}, sob supervisão de ${esc(v.supervisor || '—')}${v.supervisorReg ? ' (' + esc(v.supervisorReg) + ')' : ''}, conforme a Lei nº 11.788/2008.</p>${localData(hoje())}${assin([[v.supervisor, 'Supervisor(a) de estágio'], SP()])}`;
       imprimir('Declaração de estágio', corpo);
     },
     'est-relatorio'(id) {
