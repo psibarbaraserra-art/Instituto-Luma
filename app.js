@@ -1229,7 +1229,7 @@
     $('#lock-novo').hidden = !novo;
     $('#lock-esqueci').hidden = novo;
     $('#lock-sub').textContent = novo ? 'Primeiro acesso: confirme o CNPJ e crie a senha' : 'Painel administrativo';
-    $('#lock-btn').textContent = novo ? 'Criar senha e entrar' : 'Entrar';
+    $('#lock-btn').textContent = novo ? 'Criar senha e entrar' : 'Entrar'; $('#lock-btn').disabled = false;
     $('#lock-pin').autocomplete = novo ? 'new-password' : 'current-password';
     $('#lock-pin').value = ''; $('#lock-pin2').value = ''; $('#lock-err').textContent = '';
     setTimeout(() => ($('#lock-cnpj').value ? $('#lock-pin') : $('#lock-cnpj')).focus(), 50);

@@ -284,7 +284,7 @@ footer.foot .lema { font-family: var(--font-script); font-size: 24px; color: var
   <div class="box">
     <img src="icons/logo.png" alt="Instituto Luma">
     <span class="brand-k">Instituto</span><span class="brand-n">Luma</span>
-    <p class="lock-sub" id="lock-sub">Painel administrativo</p>
+    <p class="lock-sub" id="lock-sub">Carregando…</p>
     <form id="lock-form" autocomplete="on">
       <label for="lock-cnpj">CNPJ</label>
       <input id="lock-cnpj" name="username" inputmode="numeric" autocomplete="username" placeholder="00.000.000/0000-00">
@@ -292,7 +292,7 @@ footer.foot .lema { font-family: var(--font-script); font-size: 24px; color: var
       <input id="lock-pin" type="password" autocomplete="current-password">
       <div id="lock-novo" hidden><label for="lock-pin2">Repita a senha</label><input id="lock-pin2" type="password" autocomplete="new-password"></div>
       <div class="err" id="lock-err" role="alert"></div>
-      <button class="btn gold" id="lock-btn" style="width:100%;justify-content:center">Entrar</button>
+      <button class="btn gold" id="lock-btn" style="width:100%;justify-content:center" disabled>Aguarde…</button>
     </form>
     <button type="button" class="lock-link" id="lock-esqueci">Esqueci a senha</button>
   </div>
@@ -324,7 +324,7 @@ footer.foot .lema { font-family: var(--font-script); font-size: 24px; color: var
 <div id="toast" role="status"></div>
 <div id="print"></div>
 
-<script src="obrigacoes.js"></script>
-<script src="app.js"></script>
+<script src="obrigacoes.js?v=3"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>
