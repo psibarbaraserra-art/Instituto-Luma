@@ -39,6 +39,7 @@
     maes: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/>',
     atend: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 15h3"/>',
     grupos: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    cuid: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
     vol: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
     est: '<path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5M22 10v6"/>',
     fin: '<path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
@@ -103,6 +104,12 @@
   const C = () => D.cfg;
   const byId = (col, id) => D[col].find((x) => x.id === id);
   const nomeMae = (id, fb) => (byId('maes', id) || {}).nome || fb || '—';
+  const isEle = (m) => !!m && m.publico === 'eletivo';
+  const MAES = () => D.maes.filter((m) => !isEle(m));
+  const CUID = () => D.maes.filter(isEle);
+  const rotPessoa = (m) => m.nome + (isEle(m) ? ' · ' + (m.vinculo || 'cuidador(a)') : '');
+  const sitTxt = (m) => (isEle(m) ? { Ativa: 'Ativo(a)', Desligada: 'Desligado(a)' }[m.situacao] || m.situacao : m.situacao);
+  const VINCULOS = ['Avó / avô', 'Pai', 'Irmã / irmão', 'Tia / tio', 'Madrinha / padrinho', 'Outro familiar', 'Responsável legal / tutor(a)', 'Cuidador(a) sem parentesco'];
   const pessoas = () => [...D.vol.map((v) => ({ id: v.id, nome: v.nome, tipo: 'Voluntário(a)', area: v.area, sit: v.situacao })), ...D.est.map((e) => ({ id: e.id, nome: e.nome, tipo: 'Estagiário(a)', area: e.area, sit: e.situacao }))];
   const nomePessoa = (id, fb) => (pessoas().find((p) => p.id === id) || {}).nome || fb || '';
 
@@ -110,6 +117,7 @@
   const TABS = [
     { id: 'painel', nome: 'Painel' },
     { id: 'maes', nome: 'Mães' },
+    { id: 'cuid', nome: 'Cuidadores (eletivo)' },
     { id: 'atend', nome: 'Atendimentos' },
     { id: 'grupos', nome: 'Círculo e grupos' },
     { id: 'vol', nome: 'Voluntários' },
@@ -123,6 +131,7 @@
   const UI = {
     tab: 'painel',
     maes: { q: '', sit: 'Ativa', serv: '' },
+    cuid: { q: '', sit: 'Ativa', vinc: '' },
     atend: { mes: ymHoje(), tipo: '', status: '', q: '' },
     grupos: { ano: hoje().slice(0, 4), tipo: '' },
     vol: { q: '', sit: 'Ativo' },
@@ -135,26 +144,27 @@
   /* ================= formulários ================= */
   const SIM_NAO = ['Sim', 'Não'];
   const FORMS = {
-    maes: () => [
+    maes: (ele) => [
       { t: 'sec', l: 'Identificação' },
       { k: 'nome', l: 'Nome completo', req: true },
+      ...(ele ? [{ k: 'vinculo', l: 'Vínculo com a pessoa cuidada', t: 'select', o: VINCULOS, req: true, w: 3 }, { k: 'responsavelLegal', l: 'É responsável legal pela pessoa cuidada?', t: 'select', o: ['Sim', 'Não (a família autoriza)'], w: 3 }] : []),
       { k: 'cpf', l: 'CPF', w: 2 }, { k: 'rg', l: 'RG', w: 2 }, { k: 'nasc', l: 'Nascimento', t: 'date', w: 2 },
       { k: 'tel', l: 'WhatsApp / telefone', t: 'tel', w: 3 }, { k: 'email', l: 'E-mail', t: 'email', w: 3 },
       { k: 'endereco', l: 'Endereço', w: 4 }, { k: 'bairro', l: 'Bairro', w: 2 },
-      { k: 'cidade', l: 'Cidade', w: 3 }, { k: 'estadoCivil', l: 'Estado civil', t: 'select', o: ['Solteira', 'Casada / união estável', 'Separada / divorciada', 'Viúva'], w: 3 },
+      { k: 'cidade', l: 'Cidade', w: 3 }, { k: 'estadoCivil', l: 'Estado civil', t: 'select', o: ele ? ['Solteiro(a)', 'Casado(a) / união estável', 'Separado(a) / divorciado(a)', 'Viúvo(a)'] : ['Solteira', 'Casada / união estável', 'Separada / divorciada', 'Viúva'], w: 3 },
       { t: 'sec', l: 'Situação socioeconômica' },
       { k: 'renda', l: 'Renda familiar mensal (R$)', t: 'money', w: 2 }, { k: 'pessoasCasa', l: 'Pessoas na casa', t: 'number', w: 2 },
-      { k: 'trabalho', l: 'Trabalho da mãe', t: 'select', o: ['Formal (carteira)', 'Informal / autônoma', 'Não trabalha fora', 'Deixou de trabalhar para cuidar', 'Afastada / aposentada'], w: 2 },
+      { k: 'trabalho', l: ele ? 'Trabalho' : 'Trabalho da mãe', t: 'select', o: ele ? ['Formal (carteira)', 'Informal / autônomo(a)', 'Não trabalha fora', 'Deixou de trabalhar para cuidar', 'Afastado(a) / aposentado(a)'] : ['Formal (carteira)', 'Informal / autônoma', 'Não trabalha fora', 'Deixou de trabalhar para cuidar', 'Afastada / aposentada'], w: 2 },
       { k: 'cadUnico', l: 'CadÚnico', t: 'select', o: SIM_NAO, w: 2 }, { k: 'nis', l: 'NIS', w: 2 },
       { k: 'beneficios', l: 'Benefícios da família', t: 'multi', o: ['Bolsa Família', 'BPC', 'Auxílio municipal/estadual', 'Pensão', 'Nenhum'] },
-      { t: 'sec', l: 'Filhos' },
-      { k: 'filhos', t: 'filhos' },
+      { t: 'sec', l: ele ? 'Pessoas cuidadas' : 'Filhos' },
+      { k: 'filhos', t: 'filhos', rot: ele ? 'Pessoa cuidada' : 'Filho(a)' },
       { t: 'sec', l: 'No instituto' },
-      { k: 'situacao', l: 'Situação', t: 'select', o: ['Ativa', 'Lista de espera', 'Desligada'], req: true, w: 2 },
+      { k: 'situacao', l: 'Situação', t: 'select', o: ele ? [['Ativa', 'Ativo(a)'], ['Lista de espera', 'Lista de espera'], ['Desligada', 'Desligado(a)']] : ['Ativa', 'Lista de espera', 'Desligada'], req: true, w: 2 },
       { k: 'entrada', l: 'Data de entrada', t: 'date', w: 2 },
       { k: 'comoConheceu', l: 'Como conheceu o instituto', w: 2 },
       { k: 'servicos', l: 'Serviços que recebe / deseja', t: 'multi', o: () => [...C().tiposAtend, ...C().tiposGrupo] },
-      { k: 'lgpd', l: 'Termo de consentimento LGPD assinado', t: 'check', w: 3, help: 'Obrigatório antes de guardar dados dos filhos (LGPD, art. 14).' },
+      { k: 'lgpd', l: 'Termo de consentimento LGPD assinado', t: 'check', w: 3, help: ele ? 'Dados de criança ou adolescente: o termo precisa ser assinado pelos pais ou pelo responsável legal (LGPD, art. 14).' : 'Obrigatório antes de guardar dados dos filhos (LGPD, art. 14).' },
       { k: 'lgpdData', l: 'Data do termo', t: 'date', w: 3 },
       { k: 'imagem', l: 'Uso de imagem (fotos/vídeos)', t: 'select', o: ['Autoriza', 'Não autoriza'], w: 3 },
       { k: 'obs', l: 'Observações administrativas', t: 'textarea', help: 'Não registre aqui conteúdo de atendimento: o prontuário fica com a profissional responsável.' }
@@ -164,7 +174,7 @@
       { k: 'status', l: 'Situação', t: 'select', o: ['Agendado', 'Realizado', 'Faltou', 'Cancelado', 'Remarcado'], req: true, w: 2 },
       { k: 'tipo', l: 'Tipo de atendimento', t: 'select', o: () => C().tiposAtend, req: true, w: 3 },
       { k: 'modalidade', l: 'Modalidade', t: 'select', o: ['Presencial', 'Online'], w: 3 },
-      { k: 'maeId', l: 'Mãe atendida', t: 'select', blank: true, o: () => D.maes.filter((m) => m.situacao !== 'Desligada').sort(ordNome).map((m) => [m.id, m.nome]), req: true },
+      { k: 'maeId', l: 'Mãe ou cuidador(a) atendido(a)', t: 'select', blank: true, o: () => D.maes.filter((m) => m.situacao !== 'Desligada').sort(ordNome).map((m) => [m.id, rotPessoa(m)]), req: true },
       { k: 'profId', l: 'Profissional', t: 'select', o: () => pessoas().filter((p) => p.sit !== 'Inativo' && p.sit !== 'Desligado' && p.sit !== 'Concluído').sort(ordNome).map((p) => [p.id, p.nome + ' · ' + (p.area || p.tipo)]), w: 3, help: 'Voluntários e estagiários cadastrados.' },
       { k: 'profNome', l: 'Ou nome da profissional (se não cadastrada)', w: 3 },
       { k: 'encaminhamento', l: 'Encaminhamento', help: 'Ex.: CRAS, Defensoria, CAPSi, escola…' },
@@ -175,7 +185,7 @@
       { k: 'data', l: 'Data', t: 'date', req: true, w: 2 }, { k: 'hora', l: 'Horário', t: 'time', w: 1 },
       { k: 'tema', l: 'Tema', req: true, w: 4 }, { k: 'local', l: 'Local', w: 2 },
       { k: 'facilitador', l: 'Facilitadora(s)', w: 4 }, { k: 'status', l: 'Situação', t: 'select', o: ['Planejado', 'Realizado', 'Cancelado'], w: 2 },
-      { k: 'presentes', l: 'Mães presentes', t: 'presenca' },
+      { k: 'presentes', l: 'Mães e cuidadores presentes', t: 'presenca' },
       { k: 'extras', l: 'Outras participantes (não cadastradas)', t: 'number', w: 3 },
       { k: 'criancas', l: 'Crianças acolhidas no espaço', t: 'number', w: 3 },
       { k: 'fotos', l: 'Registro fotográfico feito', t: 'check', w: 3 }, { k: 'listaAssinada', l: 'Lista de presença assinada e arquivada', t: 'check', w: 3 },
@@ -292,20 +302,20 @@
         return `<div class="${cls}" ${dk}>${lab}<div class="multi" data-multi="${f.k}">${opts.map((o) => `<label><input type="checkbox" value="${esc(o[0])}"${sel.includes(o[0]) ? ' checked' : ''}>${esc(o[1])}</label>`).join('')}</div>${help}</div>`;
       }
       case 'money': return `<div class="${cls}" ${dk}>${lab}<input id="${id}" name="${f.k}" inputmode="decimal" placeholder="0,00" value="${v !== undefined && v !== '' && v !== null ? esc(n2(v)) : ''}">${help}</div>`;
-      case 'filhos': return `<div class="${cls}" ${dk}><div id="filhos-box">${(Array.isArray(v) ? v : []).map(filhoHTML).join('')}</div><button type="button" class="btn sm" data-add-filho>${ic('plus')} Adicionar filho(a)</button></div>`;
+      case 'filhos': { const rot = f.rot || 'Filho(a)'; return `<div class="${cls}" ${dk}><div id="filhos-box">${(Array.isArray(v) ? v : []).map((x) => filhoHTML(x, rot)).join('')}</div><button type="button" class="btn sm" data-add-filho data-rot="${esc(rot)}">${ic('plus')} Adicionar ${esc(rot.toLowerCase())}</button></div>`; }
       case 'presenca': {
         const sel = Array.isArray(v) ? v : [];
         const lista = D.maes.filter((m) => m.situacao !== 'Desligada' || sel.includes(m.id)).sort(ordNome);
-        return `<div class="${cls}" ${dk}>${lab}<input type="search" placeholder="Buscar mãe…" data-pres-q style="margin-bottom:6px"><div class="pres" data-pres="${f.k}">${lista.length ? lista.map((m) => `<label data-n="${esc(m.nome.toLowerCase())}"><input type="checkbox" value="${m.id}"${sel.includes(m.id) ? ' checked' : ''}> ${esc(m.nome)}</label>`).join('') : '<div class="muted small" style="padding:8px 0">Nenhuma mãe cadastrada ainda.</div>'}</div><small data-pres-cnt>${sel.length} selecionada(s)</small></div>`;
+        return `<div class="${cls}" ${dk}>${lab}<input type="search" placeholder="Buscar mãe ou cuidador(a)…" data-pres-q style="margin-bottom:6px"><div class="pres" data-pres="${f.k}">${lista.length ? lista.map((m) => `<label data-n="${esc(m.nome.toLowerCase())}"><input type="checkbox" value="${m.id}"${sel.includes(m.id) ? ' checked' : ''}> ${esc(rotPessoa(m))}</label>`).join('') : '<div class="muted small" style="padding:8px 0">Nenhuma mãe ou cuidador(a) cadastrado ainda.</div>'}</div><small data-pres-cnt>${sel.length} selecionada(s)</small></div>`;
       }
       default: return `<div class="${cls}" ${dk}>${lab}<input id="${id}" name="${f.k}" type="${f.t || 'text'}" value="${esc(v)}">${help}</div>`;
     }
   }
-  function filhoHTML(fi) {
-    fi = fi || {};
+  function filhoHTML(fi, rot) {
+    fi = fi || {}; rot = rot || 'Filho(a)';
     const d = Array.isArray(fi.diag) ? fi.diag : [];
     const sel = (k, o) => `<select data-fk="${k}"><option value="">—</option>${o.map((x) => `<option${fi[k] === x ? ' selected' : ''}>${x}</option>`).join('')}</select>`;
-    return `<fieldset class="filho"><div class="filho-h">Filho(a) <button type="button" class="btn sm bad" data-rm-filho>Remover</button></div>
+    return `<fieldset class="filho"><div class="filho-h">${esc(rot)} <button type="button" class="btn sm bad" data-rm-filho>Remover</button></div>
       <div class="fld w4"><label>Nome</label><input data-fk="nome" value="${esc(fi.nome)}"></div>
       <div class="fld w2"><label>Nascimento</label><input type="date" data-fk="nasc" value="${esc(fi.nasc)}"></div>
       <div class="fld"><label>Diagnóstico / condição</label><div class="multi">${DIAGS.map((x) => `<label><input type="checkbox" data-diag value="${esc(x)}"${d.includes(x) ? ' checked' : ''}>${esc(x)}</label>`).join('')}</div></div>
@@ -356,7 +366,7 @@
     });
     form.addEventListener('click', (e) => {
       if (e.target.closest('[data-close]')) { dlg.close(); return; }
-      if (e.target.closest('[data-add-filho]')) { $('#filhos-box', form).insertAdjacentHTML('beforeend', filhoHTML({})); return; }
+      if (e.target.closest('[data-add-filho]')) { $('#filhos-box', form).insertAdjacentHTML('beforeend', filhoHTML({}, e.target.closest('[data-add-filho]').dataset.rot)); return; }
       const rm = e.target.closest('[data-rm-filho]'); if (rm) { rm.closest('fieldset').remove(); }
     });
     form.addEventListener('submit', (e) => {
@@ -446,8 +456,10 @@
     D.est.forEach((e) => estAlertas(e).forEach(([n, t]) => P.push({ n, t: 'Estagiário(a) ' + e.nome + ': ' + t, tab: 'est' })));
     const volSem = D.vol.filter((v) => v.situacao === 'Ativo' && !v.termo);
     if (volSem.length) P.push({ n: 'media', t: volSem.length + ' voluntário(s) ativo(s) sem termo de adesão: ' + volSem.map((v) => v.nome.split(' ')[0]).join(', '), tab: 'vol' });
-    const maeSem = D.maes.filter((m) => m.situacao === 'Ativa' && !m.lgpd);
+    const maeSem = MAES().filter((m) => m.situacao === 'Ativa' && !m.lgpd);
     if (maeSem.length) P.push({ n: 'media', t: maeSem.length + ' mãe(s) ativa(s) sem termo de consentimento LGPD', tab: 'maes' });
+    const cuidSem = CUID().filter((m) => m.situacao === 'Ativa' && !m.lgpd);
+    if (cuidSem.length) P.push({ n: 'media', t: cuidSem.length + ' cuidador(es) ativo(s) sem termo de consentimento LGPD', tab: 'cuid' });
     const circ = C().tiposGrupo[0];
     if (circ && !D.grupos.some((g) => g.tipo === circ && g.data.slice(0, 7) === ym && g.status !== 'Cancelado')) P.push({ n: 'info', t: circ + ' deste mês ainda não foi agendado', tab: 'grupos' });
     const semComp = D.fin.filter((f) => f.data.slice(0, 7) <= ym && f.data.slice(0, 7) >= ymAdd(ym, -2) && !f.comprovante).length;
@@ -510,8 +522,9 @@
 
   VIEWS.painel = () => {
     const ym = ymHoje(); const h = hoje(); const r = resumoMes(ym);
-    const ativas = D.maes.filter((m) => m.situacao === 'Ativa').length;
-    const espera = D.maes.filter((m) => m.situacao === 'Lista de espera').length;
+    const ativas = MAES().filter((m) => m.situacao === 'Ativa').length;
+    const espera = MAES().filter((m) => m.situacao === 'Lista de espera').length;
+    const cuidAt = CUID().filter((m) => m.situacao === 'Ativa').length;
     const atMes = D.atend.filter((a) => a.data.slice(0, 7) === ym && a.status === 'Realizado');
     const grMes = D.grupos.filter((g) => g.data.slice(0, 7) === ym && g.status !== 'Cancelado' && g.status !== 'Planejado');
     const partic = grMes.reduce((a, g) => a + (g.presentes || []).length + (+g.extras || 0), 0);
@@ -528,7 +541,8 @@
     return head(`${saud}! <span class="script">Luma</span>`, `${cap(new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))}`, `<button class="btn gold" data-act="new" data-col="atend">${ic('plus')} Atendimento</button><button class="btn" data-act="new" data-col="fin">${ic('plus')} Lançamento</button><button class="btn" data-act="new" data-col="maes">${ic('plus')} Mãe</button>`) +
       `<div class="grid-cards">
         <div class="kpi"><div class="l">Mães ativas</div><div class="v">${ativas}</div><div class="s">${espera} na lista de espera</div></div>
-        <div class="kpi"><div class="l">Atendimentos no mês</div><div class="v">${atMes.length}</div><div class="s">${atendidas} mãe(s) atendida(s) em ${MESES[+ym.slice(5) - 1]}</div></div>
+        <div class="kpi"><div class="l">Cuidadores (eletivo)</div><div class="v">${cuidAt}</div><div class="s">avós, pais, irmãos, padrinhos…</div></div>
+        <div class="kpi"><div class="l">Atendimentos no mês</div><div class="v">${atMes.length}</div><div class="s">${atendidas} pessoa(s) atendida(s) em ${MESES[+ym.slice(5) - 1]}</div></div>
         <div class="kpi"><div class="l">Grupos no mês</div><div class="v">${grMes.length}</div><div class="s">${partic} participação(ões)</div></div>
         <div class="kpi"><div class="l">Saldo atual</div><div class="v${saldoAtual() < 0 ? ' neg' : ''}">${brl(saldoAtual())}</div><div class="s">Mês: +${brl(r.e)} / −${brl(r.s)}</div></div>
         <div class="kpi"><div class="l">Equipe ativa</div><div class="v">${D.vol.filter((v) => v.situacao === 'Ativo').length + D.est.filter((e) => e.situacao === 'Ativo').length}</div><div class="s">${D.vol.filter((v) => v.situacao === 'Ativo').length} voluntário(s) · ${D.est.filter((e) => e.situacao === 'Ativo').length} estagiário(s)</div></div>
@@ -561,15 +575,37 @@
   };
   LISTS.maes = () => {
     const f = UI.maes; const q = f.q.toLowerCase().trim();
-    const L = D.maes.filter((m) => (!f.sit || m.situacao === f.sit) && (!f.serv || (m.servicos || []).includes(f.serv)) && (!q || [m.nome, m.bairro, m.tel, m.cpf, ...(m.filhos || []).map((x) => x.nome)].join(' ').toLowerCase().includes(q))).sort(ordNome);
-    $('#cnt').textContent = L.length + ' de ' + D.maes.length;
+    const L = MAES().filter((m) => (!f.sit || m.situacao === f.sit) && (!f.serv || (m.servicos || []).includes(f.serv)) && (!q || [m.nome, m.bairro, m.tel, m.cpf, ...(m.filhos || []).map((x) => x.nome)].join(' ').toLowerCase().includes(q))).sort(ordNome);
+    $('#cnt').textContent = L.length + ' de ' + MAES().length;
     $('#lista').innerHTML = tbl([
       { h: 'Mãe', v: (m) => `<div class="nm">${esc(m.nome)}</div><div class="sub">${esc([m.tel, m.bairro].filter(Boolean).join(' · '))}</div>` },
       { h: 'Filhos', v: (m) => (m.filhos || []).map((x) => `<div>${esc(x.nome || 'Filho(a)')}${x.nasc ? ` <span class="sub">${idade(x.nasc)} anos</span>` : ''}<div class="sub">${esc((x.diag || []).join(', '))}</div></div>`).join('') || '<span class="muted">—</span>' },
       { h: 'Serviços', v: (m) => (m.servicos || []).map((s) => `<span class="badge" style="margin:0 4px 4px 0">${esc(s)}</span>`).join('') || '<span class="muted">—</span>' },
       { h: 'Situação', v: (m) => `<span class="badge ${m.situacao === 'Ativa' ? 'b-ok' : m.situacao === 'Lista de espera' ? 'b-warn' : ''}">${esc(m.situacao)}</span>${m.lgpd ? '' : '<div style="margin-top:4px"><span class="badge b-bad">Sem termo LGPD</span></div>'}` },
       { h: '', c: 'acts', v: (m) => acts('maes', m.id, `<button class="btn sm" data-rep="mae-ficha" data-id="${m.id}">${ic('print')} Ficha + termo</button>`) }
-    ], L, D.maes.length ? '<b>Nenhuma mãe encontrada</b>Mude os filtros.' : '<b>Nenhuma mãe cadastrada</b>Toque em "Nova mãe" para começar.');
+    ], L, MAES().length ? '<b>Nenhuma mãe encontrada</b>Mude os filtros.' : '<b>Nenhuma mãe cadastrada</b>Toque em "Nova mãe" para começar.');
+  };
+
+  /* ---- cuidadores (público eletivo) ---- */
+  VIEWS.cuid = () => {
+    const f = UI.cuid;
+    return head('Cuidadores <span class="script">· público eletivo</span>', 'Nosso público prioritário são as mães, mas também acolhemos quem cuida: avós, pais, irmãos, tios, padrinhos e madrinhas e outras pessoas que cuidam de criança ou pessoa com deficiência ou comorbidade.', `<button class="btn gold" data-act="new" data-col="cuid">${ic('plus')} Novo(a) cuidador(a)</button><button class="btn" data-rep="maes-lista" data-col="cuid">${ic('print')} Imprimir relação</button>`) +
+      `<div class="note">Os cuidadores entram nos atendimentos, no Círculo de Cuidado e nos relatórios, contados à parte das mães. <b>LGPD:</b> se o cuidador não for o responsável legal, o termo de consentimento dos dados da criança deve ser assinado também pela mãe, pai ou responsável legal.</div>
+      <div class="toolbar"><input type="search" placeholder="Buscar por nome, pessoa cuidada, bairro, telefone…" data-f="cuid.q" value="${esc(f.q)}">
+      <select data-f="cuid.sit">${optsHTML([['Ativa', 'Ativos'], ['Lista de espera', 'Lista de espera'], ['Desligada', 'Desligados']], f.sit, 'Todas as situações')}</select>
+      <select data-f="cuid.vinc">${optsHTML(VINCULOS, f.vinc, 'Todos os vínculos')}</select><span class="cnt" id="cnt"></span></div><div id="lista"></div>`;
+  };
+  LISTS.cuid = () => {
+    const f = UI.cuid; const q = f.q.toLowerCase().trim();
+    const L = CUID().filter((m) => (!f.sit || m.situacao === f.sit) && (!f.vinc || m.vinculo === f.vinc) && (!q || [m.nome, m.bairro, m.tel, m.cpf, ...(m.filhos || []).map((x) => x.nome)].join(' ').toLowerCase().includes(q))).sort(ordNome);
+    $('#cnt').textContent = L.length + ' de ' + CUID().length;
+    $('#lista').innerHTML = tbl([
+      { h: 'Cuidador(a)', v: (m) => `<div class="nm">${esc(m.nome)}</div><div class="sub">${esc([m.tel, m.bairro].filter(Boolean).join(' · '))}</div>` },
+      { h: 'Vínculo', v: (m) => `<span class="badge b-gold">${esc(m.vinculo || '—')}</span>${m.responsavelLegal === 'Sim' ? '<div class="sub" style="margin-top:4px">responsável legal</div>' : ''}` },
+      { h: 'Pessoas cuidadas', v: (m) => (m.filhos || []).map((x) => `<div>${esc(x.nome || 'Pessoa cuidada')}${x.nasc ? ` <span class="sub">${idade(x.nasc)} anos</span>` : ''}<div class="sub">${esc((x.diag || []).join(', '))}</div></div>`).join('') || '<span class="muted">—</span>' },
+      { h: 'Situação', v: (m) => `<span class="badge ${m.situacao === 'Ativa' ? 'b-ok' : m.situacao === 'Lista de espera' ? 'b-warn' : ''}">${esc(sitTxt(m))}</span>${m.lgpd ? '' : '<div style="margin-top:4px"><span class="badge b-bad">Sem termo LGPD</span></div>'}` },
+      { h: '', c: 'acts', v: (m) => acts('maes', m.id, `<button class="btn sm" data-rep="mae-ficha" data-id="${m.id}">${ic('print')} Ficha + termo</button>`) }
+    ], L, CUID().length ? '<b>Nenhum(a) cuidador(a) encontrado(a)</b>Mude os filtros.' : '<b>Nenhum(a) cuidador(a) cadastrado(a)</b>Toque em "Novo(a) cuidador(a)" para começar.');
   };
 
   /* ---- atendimentos ---- */
@@ -590,7 +626,7 @@
     $('#lista').innerHTML = tbl([
       { h: 'Data', v: (a) => `<div class="nm">${fmtD(a.data)}</div><div class="sub">${esc(a.hora || '')} ${esc(a.modalidade || '')}</div>` },
       { h: 'Tipo', v: (a) => esc(a.tipo) },
-      { h: 'Mãe', v: (a) => `<div class="nm">${esc(nomeMae(a.maeId, a.maeNome))}</div>${a.encaminhamento ? `<div class="sub">Encaminhada: ${esc(a.encaminhamento)}</div>` : ''}` },
+      { h: 'Mãe / cuidador(a)', v: (a) => `<div class="nm">${esc(nomeMae(a.maeId, a.maeNome))}${isEle(byId('maes', a.maeId)) ? ' <span class="badge b-gold">eletivo</span>' : ''}</div>${a.encaminhamento ? `<div class="sub">Encaminhada: ${esc(a.encaminhamento)}</div>` : ''}` },
       { h: 'Profissional', v: (a) => esc(nomePessoa(a.profId, a.profNome)) || '<span class="muted">—</span>' },
       { h: 'Situação', v: (a) => `<span class="badge ${cor[a.status] || ''}">${esc(a.status)}</span>` },
       { h: '', c: 'acts', v: (a) => acts('atend', a.id, a.status === 'Agendado' ? `<button class="btn sm" data-act="realizado" data-id="${a.id}">${ic('check')} Realizado</button><button class="btn sm" data-act="faltou" data-id="${a.id}">Faltou</button>` : '') }
@@ -769,7 +805,7 @@
         ${card('Demonstrativo financeiro anual', 'Receitas e despesas do ano por categoria e por mês, para a prestação de contas na assembleia.', selAno('r-ano-f'), 'fin-anual')}
       </div>
       <div class="mgroup">Cadastros e controles</div><div class="rep-grid">
-        ${card('Relação de mães', 'Lista nominal das mães e filhos (documento interno e sigiloso).', `<select id="r-sit">${optsHTML(['Ativa', 'Lista de espera', 'Desligada'], 'Ativa', 'Todas')}</select>`, 'maes-lista')}
+        ${card('Relação de mães ou cuidadores', 'Lista nominal com filhos ou pessoas cuidadas (documento interno e sigiloso).', `<select id="r-pub"><option value="maes">Mães</option><option value="cuid">Cuidadores (eletivo)</option></select><select id="r-sit">${optsHTML(['Ativa', 'Lista de espera', 'Desligada'], 'Ativa', 'Todas')}</select>`, 'maes-lista')}
         ${card('Relação da equipe', 'Voluntários e estagiários ativos, área, termo e período.', '', 'equipe-lista')}
         ${card('Termo de inventário patrimonial', 'Lista de bens com nº de patrimônio, local, estado e valor, com termo de conferência.', '', 'inventario')}
         ${card('Checklist de obrigações', 'Situação das obrigações do mês ou do ano.', `<input type="month" id="r-mes-o" value="${ym}">`, 'obrig')}
@@ -877,7 +913,9 @@
       const A = D.atend.filter((a) => a.data.slice(0, 7) === ym); const G = D.grupos.filter((g) => g.data.slice(0, 7) === ym && g.status !== 'Cancelado');
       const real = A.filter((a) => a.status === 'Realizado');
       const atendidas = new Set([...real.map((a) => a.maeId), ...G.filter((g) => g.status === 'Realizado').flatMap((g) => g.presentes || [])]);
-      const novas = D.maes.filter((m) => (m.entrada || '').slice(0, 7) === ym);
+      const novas = MAES().filter((m) => (m.entrada || '').slice(0, 7) === ym);
+      const novosC = CUID().filter((m) => (m.entrada || '').slice(0, 7) === ym);
+      const atM = [...atendidas].filter((id) => !isEle(byId('maes', id))).length; const atC = atendidas.size - atM;
       const r = resumoMes(ym);
       const st = ['Realizado', 'Faltou', 'Cancelado', 'Agendado'];
       const linhasT = C().tiposAtend.map((t) => `<tr><td>${esc(t)}</td>${st.map((s) => `<td class="r">${A.filter((a) => a.tipo === t && (s === 'Agendado' ? a.status === 'Agendado' || a.status === 'Remarcado' : a.status === s)).length}</td>`).join('')}<td class="r">${new Set(real.filter((a) => a.tipo === t).map((a) => a.maeId)).size}</td></tr>`);
@@ -886,8 +924,8 @@
       const ms = obrigLista('m').map((o) => ({ o, st: obStatus('m:' + ym + ':' + o.id, prazoMensal(o, ym)) }));
       const cntSt = (s) => ms.filter((x) => x.st.s === s).length;
       const profs = {}; real.forEach((a) => { const n = nomePessoa(a.profId, a.profNome); if (n) profs[n] = (profs[n] || 0) + 1; });
-      const corpo = `<h2>1. Resumo do mês</h2>${kv([['Mães ativas no cadastro', D.maes.filter((m) => m.situacao === 'Ativa').length], ['Novas mães cadastradas', novas.length], ['Mães atendidas no mês', atendidas.size], ['Lista de espera', D.maes.filter((m) => m.situacao === 'Lista de espera').length], ['Atendimentos realizados', real.length], ['Encontros em grupo', G.filter((g) => g.status === 'Realizado').length], ['Participações em grupos', G.filter((g) => g.status === 'Realizado').reduce((a, g) => a + (g.presentes || []).length + (+g.extras || 0), 0)], ['Crianças acolhidas nos grupos', G.reduce((a, g) => a + (+g.criancas || 0), 0)]])}
-        <h2>2. Atendimentos individuais</h2>${ptab(['Tipo', ['Realizados', 'r'], ['Faltas', 'r'], ['Cancelados', 'r'], ['Agendados', 'r'], ['Mães', 'r']], linhasT, tot)}
+      const corpo = `<h2>1. Resumo do mês</h2>${kv([['Mães ativas no cadastro', MAES().filter((m) => m.situacao === 'Ativa').length], ['Cuidadores ativos (público eletivo)', CUID().filter((m) => m.situacao === 'Ativa').length], ['Novos cadastros (mães / cuidadores)', novas.length + ' / ' + novosC.length], ['Pessoas atendidas no mês', atendidas.size + ' (' + atM + ' mães, ' + atC + ' cuidadores)'], ['Lista de espera', D.maes.filter((m) => m.situacao === 'Lista de espera').length], ['Atendimentos realizados', real.length], ['Encontros em grupo', G.filter((g) => g.status === 'Realizado').length], ['Participações em grupos', G.filter((g) => g.status === 'Realizado').reduce((a, g) => a + (g.presentes || []).length + (+g.extras || 0), 0)], ['Crianças acolhidas nos grupos', G.reduce((a, g) => a + (+g.criancas || 0), 0)]])}
+        <h2>2. Atendimentos individuais</h2>${ptab(['Tipo', ['Realizados', 'r'], ['Faltas', 'r'], ['Cancelados', 'r'], ['Agendados', 'r'], ['Pessoas', 'r']], linhasT, tot)}
         ${Object.keys(profs).length ? '<p class="mini"><b>Por profissional:</b> ' + Object.entries(profs).map(([n, q]) => esc(n) + ' (' + q + ')').join(' · ') + '</p>' : ''}
         ${enc.length ? `<p class="mini"><b>Encaminhamentos realizados:</b> ${enc.length} (${esc([...new Set(enc.map((a) => a.encaminhamento))].join(', '))})</p>` : ''}
         <h2>3. Círculo de Cuidado e atividades em grupo</h2>${G.length ? ptab(['Data', 'Atividade', 'Tema', 'Facilitação', ['Participantes', 'r']], G.sort((a, b) => a.data.localeCompare(b.data)).map((g) => `<tr><td>${fmtD(g.data)}</td><td>${esc(g.tipo)}${g.status !== 'Realizado' ? ' <i>(' + esc(g.status || 'Planejado') + ')</i>' : ''}</td><td>${esc(g.tema)}</td><td>${esc(g.facilitador)}</td><td class="r">${(g.presentes || []).length + (+g.extras || 0)}</td></tr>`)) + G.filter((g) => g.relato).map((g) => `<p class="mini"><b>${esc(g.tema)}:</b> ${esc(g.relato)}</p>`).join('') : '<p>Nenhuma atividade em grupo registrada no mês.</p>'}
@@ -911,12 +949,13 @@
       const realAno = D.atend.filter((a) => a.data.slice(0, 4) === ano && a.status === 'Realizado');
       const GA = D.grupos.filter((g) => g.data.slice(0, 4) === ano && g.status === 'Realizado');
       const atAno = new Set([...realAno.map((a) => a.maeId), ...GA.flatMap((g) => g.presentes || [])]);
+      const atAnoC = [...atAno].filter((id) => isEle(byId('maes', id))).length;
       const fe = D.fin.filter((f) => f.data.slice(0, 4) === ano);
       const E = fe.filter((f) => f.tipo === 'e').reduce((a, f) => a + (+f.valor || 0), 0); const S = fe.filter((f) => f.tipo === 's').reduce((a, f) => a + (+f.valor || 0), 0);
       const corpo = `<h2>1. Apresentação</h2><p>O ${esc(C().nome)} — ${esc(C().slogan)} — ${C().fundacao ? 'fundado em ' + fmtD(C().fundacao) + ', ' : ''}tem como missão ser "${esc(C().lema)}" Este relatório apresenta as atividades realizadas em ${ano}: atendimentos psicológicos, jurídicos e sociais, o Círculo de Cuidado Luma (roda de conversa e compartilhamento mensal) e demais atividades em grupo.</p>
         <h2>Diretoria</h2>${dirHTML('p-dir')}
-        <h2>2. Números do ano</h2>${kv([['Mães atendidas no ano', atAno.size], ['Novas mães cadastradas', sum((r) => r.nv)], ['Atendimentos individuais realizados', sum((r) => r.tot)], ['Encontros em grupo realizados', sum((r) => r.g)], ['Participações em grupos', sum((r) => r.p)], ['Voluntários e estagiários ativos', D.vol.filter((v) => v.situacao === 'Ativo').length + D.est.filter((v) => v.situacao === 'Ativo').length], ['Receitas do ano', brl(E)], ['Despesas do ano', brl(S)]])}
-        <h2>3. Atendimentos e atividades mês a mês</h2>${ptab(['Mês', ...tipos.map((t) => [esc(t.replace('Atendimento ', '')), 'r']), ['Total', 'r'], ['Grupos', 'r'], ['Particip.', 'r'], ['Novas mães', 'r'], ['Mães atend.', 'r']], rows.map((r) => `<tr><td>${cap(r.m)}</td>${r.t.map((x) => `<td class="r">${x}</td>`).join('')}<td class="r"><b>${r.tot}</b></td><td class="r">${r.g}</td><td class="r">${r.p}</td><td class="r">${r.nv}</td><td class="r">${r.at}</td></tr>`), `<tr><td>Total</td>${tipos.map((t, i) => `<td class="r">${sum((r) => r.t[i])}</td>`).join('')}<td class="r">${sum((r) => r.tot)}</td><td class="r">${sum((r) => r.g)}</td><td class="r">${sum((r) => r.p)}</td><td class="r">${sum((r) => r.nv)}</td><td class="r">${atAno.size}</td></tr>`)}
+        <h2>2. Números do ano</h2>${kv([['Pessoas atendidas no ano', atAno.size + ' (' + (atAno.size - atAnoC) + ' mães, ' + atAnoC + ' cuidadores)'], ['Novos cadastros no ano', sum((r) => r.nv)], ['Atendimentos individuais realizados', sum((r) => r.tot)], ['Encontros em grupo realizados', sum((r) => r.g)], ['Participações em grupos', sum((r) => r.p)], ['Voluntários e estagiários ativos', D.vol.filter((v) => v.situacao === 'Ativo').length + D.est.filter((v) => v.situacao === 'Ativo').length], ['Receitas do ano', brl(E)], ['Despesas do ano', brl(S)]])}
+        <h2>3. Atendimentos e atividades mês a mês</h2>${ptab(['Mês', ...tipos.map((t) => [esc(t.replace('Atendimento ', '')), 'r']), ['Total', 'r'], ['Grupos', 'r'], ['Particip.', 'r'], ['Novos cadastros', 'r'], ['Pessoas atend.', 'r']], rows.map((r) => `<tr><td>${cap(r.m)}</td>${r.t.map((x) => `<td class="r">${x}</td>`).join('')}<td class="r"><b>${r.tot}</b></td><td class="r">${r.g}</td><td class="r">${r.p}</td><td class="r">${r.nv}</td><td class="r">${r.at}</td></tr>`), `<tr><td>Total</td>${tipos.map((t, i) => `<td class="r">${sum((r) => r.t[i])}</td>`).join('')}<td class="r">${sum((r) => r.tot)}</td><td class="r">${sum((r) => r.g)}</td><td class="r">${sum((r) => r.p)}</td><td class="r">${sum((r) => r.nv)}</td><td class="r">${atAno.size}</td></tr>`)}
         <h2>4. Círculo de Cuidado Luma e grupos</h2>${GA.length ? ptab(['Data', 'Atividade', 'Tema', ['Participantes', 'r']], GA.sort((a, b) => a.data.localeCompare(b.data)).map((g) => `<tr><td>${fmtD(g.data)}</td><td>${esc(g.tipo)}</td><td>${esc(g.tema)}</td><td class="r">${(g.presentes || []).length + (+g.extras || 0)}</td></tr>`)) : '<p>Nenhum encontro registrado.</p>'}
         <h2>5. Considerações e metas para o próximo ano</h2><div class="linhas">${'<div></div>'.repeat(7)}</div>
         ${localData()}${assin([SP(), SV(), ST()])}`;
@@ -931,11 +970,13 @@
       const faixa = (i) => (i === null ? 'Sem data' : i <= 3 ? '0 a 3 anos' : i <= 6 ? '4 a 6 anos' : i <= 12 ? '7 a 12 anos' : i <= 17 ? '13 a 17 anos' : '18 anos ou mais');
       const sm = +C().sm || 1621;
       const rf = (m) => { if (m.renda === '' || m.renda === undefined) return 'Não informada'; const pc = (+m.renda || 0) / Math.max(1, +m.pessoasCasa || 1); return pc <= sm / 4 ? 'Até ¼ salário mínimo por pessoa' : pc <= sm / 2 ? 'De ¼ a ½ salário mínimo por pessoa' : pc <= sm ? 'De ½ a 1 salário mínimo por pessoa' : 'Acima de 1 salário mínimo por pessoa'; };
-      const corpo = `<p>Dados agregados das <b>${M.length}</b> mães ativas e de seus <b>${F.length}</b> filhos, sem identificação pessoal, para uso em relatórios, projetos e editais (LGPD).</p>
-        <h2>Diagnósticos / condições dos filhos</h2>${tab('Condição', cnt(F.flatMap((f) => f.diag || [])), F.length)}<p class="mini">Um filho pode ter mais de uma condição.</p>
-        <h2>Idade dos filhos</h2>${tab('Faixa etária', cnt(F.map((f) => faixa(f.nasc ? idade(f.nasc) : null))), F.length)}
+      const nC = M.filter(isEle).length;
+      const corpo = `<p>Dados agregados de <b>${M.length}</b> pessoas ativas no cadastro — <b>${M.length - nC}</b> mães (público prioritário) e <b>${nC}</b> cuidadores (público eletivo) — e das <b>${F.length}</b> pessoas sob seus cuidados, sem identificação pessoal, para uso em relatórios, projetos e editais (LGPD).</p>
+        <h2>Público atendido</h2>${tab('Público / vínculo', cnt(M.map((m) => (isEle(m) ? 'Cuidador(a) · ' + (m.vinculo || 'vínculo não informado') : 'Mãe'))), M.length)}
+        <h2>Diagnósticos / condições dos filhos e pessoas cuidadas</h2>${tab('Condição', cnt(F.flatMap((f) => f.diag || [])), F.length)}<p class="mini">Uma pessoa pode ter mais de uma condição.</p>
+        <h2>Idade dos filhos e pessoas cuidadas</h2>${tab('Faixa etária', cnt(F.map((f) => faixa(f.nasc ? idade(f.nasc) : null))), F.length)}
         <h2>Laudo e BPC</h2>${tab('Laudo', cnt(F.map((f) => f.laudo || 'Não informado')), F.length)}${tab('BPC', cnt(F.map((f) => f.bpc || 'Não informado')), F.length)}
-        <h2>Situação das mães</h2>${tab('Trabalho', cnt(M.map((m) => m.trabalho || 'Não informado')), M.length)}${tab('Renda familiar per capita (SM R$ ' + n2(sm) + ')', cnt(M.map(rf)), M.length)}${tab('CadÚnico', cnt(M.map((m) => m.cadUnico || 'Não informado')), M.length)}${tab('Benefícios', cnt(M.flatMap((m) => (m.beneficios || []).length ? m.beneficios : ['Não informado'])), M.length)}
+        <h2>Situação das mães e cuidadores</h2>${tab('Trabalho', cnt(M.map((m) => m.trabalho || 'Não informado')), M.length)}${tab('Renda familiar per capita (SM R$ ' + n2(sm) + ')', cnt(M.map(rf)), M.length)}${tab('CadÚnico', cnt(M.map((m) => m.cadUnico || 'Não informado')), M.length)}${tab('Benefícios', cnt(M.flatMap((m) => (m.beneficios || []).length ? m.beneficios : ['Não informado'])), M.length)}
         <h2>Bairros</h2>${tab('Bairro', cnt(M.map((m) => m.bairro || 'Não informado')).slice(0, 15), M.length)}
         <h2>Serviços</h2>${tab('Serviço', cnt(M.flatMap((m) => m.servicos || [])), M.length)}`;
       imprimir('Perfil das famílias atendidas', corpo, { sub: 'Posição em ' + fmtD(hoje()) });
@@ -977,11 +1018,12 @@
         ${localData()}${assin([ST(), SP(), [C().conselhoFiscal, 'Conselho Fiscal']])}`;
       imprimir('Demonstrativo financeiro anual', corpo, { sub: 'Exercício de ' + ano });
     },
-    'maes-lista'() {
-      const sit = $('#r-sit') ? $('#r-sit').value : UI.maes.sit;
-      const M = D.maes.filter((m) => !sit || m.situacao === sit).sort(ordNome);
-      const corpo = `<p class="mini"><b>Documento interno e sigiloso.</b> Contém dados pessoais protegidos pela LGPD. Não compartilhar.</p>` + ptab(['Nº', 'Mãe', 'Telefone', 'Bairro', 'Filhos (idade · condição)', 'Entrada', 'LGPD'], M.map((m, i) => `<tr><td>${i + 1}</td><td>${esc(m.nome)}</td><td>${esc(m.tel)}</td><td>${esc(m.bairro)}</td><td>${(m.filhos || []).map((f) => esc(f.nome) + (f.nasc ? ' (' + idade(f.nasc) + 'a)' : '') + ((f.diag || []).length ? ' · ' + esc(f.diag.join(', ')) : '')).join('<br>')}</td><td>${fmtD(m.entrada)}</td><td>${m.lgpd ? 'Sim' : 'Não'}</td></tr>`));
-      imprimir('Relação de mães cadastradas', corpo, { sub: (sit ? 'Situação: ' + sit + ' · ' : '') + M.length + ' cadastro(s) · ' + fmtD(hoje()), paisagem: true });
+    'maes-lista'(id, col) {
+      const ele = col === 'cuid' || (UI.tab === 'rel' && $('#r-pub') && $('#r-pub').value === 'cuid');
+      const sit = UI.tab === 'rel' && $('#r-sit') ? $('#r-sit').value : UI[ele ? 'cuid' : 'maes'].sit;
+      const M = (ele ? CUID() : MAES()).filter((m) => !sit || m.situacao === sit).sort(ordNome);
+      const corpo = `<p class="mini"><b>Documento interno e sigiloso.</b> Contém dados pessoais protegidos pela LGPD. Não compartilhar.</p>` + ptab(['Nº', ele ? 'Cuidador(a) · vínculo' : 'Mãe', 'Telefone', 'Bairro', ele ? 'Pessoas cuidadas (idade · condição)' : 'Filhos (idade · condição)', 'Entrada', 'LGPD'], M.map((m, i) => `<tr><td>${i + 1}</td><td>${esc(m.nome)}${ele && m.vinculo ? '<br><span class="mini">' + esc(m.vinculo) + '</span>' : ''}</td><td>${esc(m.tel)}</td><td>${esc(m.bairro)}</td><td>${(m.filhos || []).map((f) => esc(f.nome) + (f.nasc ? ' (' + idade(f.nasc) + 'a)' : '') + ((f.diag || []).length ? ' · ' + esc(f.diag.join(', ')) : '')).join('<br>')}</td><td>${fmtD(m.entrada)}</td><td>${m.lgpd ? 'Sim' : 'Não'}</td></tr>`));
+      imprimir(ele ? 'Relação de cuidadores (público eletivo)' : 'Relação de mães cadastradas', corpo, { sub: (sit ? 'Situação: ' + sit + ' · ' : '') + M.length + ' cadastro(s) · ' + fmtD(hoje()), paisagem: true });
     },
     'equipe-lista'() {
       const V = D.vol.filter((v) => v.situacao === 'Ativo').sort(ordNome); const E = D.est.filter((v) => v.situacao === 'Ativo').sort(ordNome);
@@ -1041,13 +1083,13 @@
     },
     'mae-ficha'(id) {
       const m = byId('maes', id); if (!m) return;
-      const fil = (m.filhos || []);
-      const corpo = `<h2>Identificação</h2>${kv([['Nome', m.nome, true], ['CPF', m.cpf], ['RG', m.rg], ['Nascimento', fmtD(m.nasc)], ['Estado civil', m.estadoCivil], ['Telefone', m.tel], ['E-mail', m.email], ['Endereço', [m.endereco, m.bairro, m.cidade].filter(Boolean).join(' – '), true]])}
+      const fil = (m.filhos || []); const ele = isEle(m);
+      const corpo = `<h2>Identificação</h2>${kv([['Nome', m.nome, true], ...(ele ? [['Público', 'Cuidador(a) – público eletivo'], ['Vínculo', m.vinculo], ['Responsável legal', m.responsavelLegal]] : []), ['CPF', m.cpf], ['RG', m.rg], ['Nascimento', fmtD(m.nasc)], ['Estado civil', m.estadoCivil], ['Telefone', m.tel], ['E-mail', m.email], ['Endereço', [m.endereco, m.bairro, m.cidade].filter(Boolean).join(' – '), true]])}
         <h2>Situação socioeconômica</h2>${kv([['Renda familiar', m.renda !== '' && m.renda !== undefined ? brl(m.renda) : ''], ['Pessoas na casa', m.pessoasCasa], ['Trabalho', m.trabalho], ['CadÚnico', m.cadUnico], ['NIS', m.nis], ['Benefícios', (m.beneficios || []).join(', ')]])}
-        <h2>Filhos</h2>${fil.length ? ptab(['Nome', 'Nascimento', 'Condição', 'CID', 'Laudo', 'BPC', 'Escola', 'Terapias'], fil.map((f) => `<tr><td>${esc(f.nome)}</td><td>${fmtD(f.nasc)}${f.nasc ? ' (' + idade(f.nasc) + 'a)' : ''}</td><td>${esc((f.diag || []).join(', '))}</td><td>${esc(f.cid)}</td><td>${esc(f.laudo)}</td><td>${esc(f.bpc)}</td><td>${esc(f.escola)}</td><td>${esc(f.terapias)}</td></tr>`)) : '<p>—</p>'}
-        <h2>No instituto</h2>${kv([['Situação', m.situacao], ['Entrada', fmtD(m.entrada)], ['Serviços', (m.servicos || []).join(', '), true], ['Como conheceu', m.comoConheceu], ['Uso de imagem', m.imagem]])}
+        <h2>${ele ? 'Pessoas cuidadas' : 'Filhos'}</h2>${fil.length ? ptab(['Nome', 'Nascimento', 'Condição', 'CID', 'Laudo', 'BPC', 'Escola', 'Terapias'], fil.map((f) => `<tr><td>${esc(f.nome)}</td><td>${fmtD(f.nasc)}${f.nasc ? ' (' + idade(f.nasc) + 'a)' : ''}</td><td>${esc((f.diag || []).join(', '))}</td><td>${esc(f.cid)}</td><td>${esc(f.laudo)}</td><td>${esc(f.bpc)}</td><td>${esc(f.escola)}</td><td>${esc(f.terapias)}</td></tr>`)) : '<p>—</p>'}
+        <h2>No instituto</h2>${kv([['Situação', sitTxt(m)], ['Entrada', fmtD(m.entrada)], ['Serviços', (m.servicos || []).join(', '), true], ['Como conheceu', m.comoConheceu], ['Uso de imagem', m.imagem]])}
         <div class="brk"></div>${termoLGPD(m)}`;
-      imprimir('Ficha cadastral', corpo, { sub: m.nome });
+      imprimir(ele ? 'Ficha cadastral – cuidador(a)' : 'Ficha cadastral', corpo, { sub: m.nome });
     },
     'lgpd-branco'() { imprimir('Termo de consentimento', termoLGPD(null), { semTitulo: true }); },
     'ficha-branco'() {
@@ -1105,23 +1147,28 @@
   function termoLGPD(m) {
     const c = C(); const b = (x, n) => esc(x) || '_'.repeat(n || 30);
     const fil = m && (m.filhos || []).length ? m.filhos.map((f) => esc(f.nome)).join(', ') : '_'.repeat(60);
+    const ele = isEle(m); const quem = m ? (ele ? 'da(s) pessoa(s) sob meus cuidados' : 'do(s) meu(s) filho(s)') : 'do(s) meu(s) filho(s) ou da(s) pessoa(s) sob meus cuidados';
     return `<h1>Termo de consentimento para tratamento de dados pessoais</h1><div class="p-sub">Lei nº 13.709/2018 – Lei Geral de Proteção de Dados (LGPD)</div>
-      <p>Eu, <b>${b(m && m.nome, 45)}</b>, CPF ${b(m && m.cpf, 16)}, autorizo o <b>${esc(c.nome)}</b>${c.cnpj ? ', CNPJ ' + esc(c.cnpj) : ''}, a coletar, guardar e utilizar os meus dados pessoais e os dados pessoais, inclusive de saúde (dados sensíveis), do(s) meu(s) filho(s): <b>${fil}</b>, nas condições abaixo.</p>
+      <p>Eu, <b>${b(m && m.nome, 45)}</b>, CPF ${b(m && m.cpf, 16)}, autorizo o <b>${esc(c.nome)}</b>${c.cnpj ? ', CNPJ ' + esc(c.cnpj) : ''}, a coletar, guardar e utilizar os meus dados pessoais e os dados pessoais, inclusive de saúde (dados sensíveis), ${quem}: <b>${fil}</b>, nas condições abaixo.</p>
       <p><b>1. Para que os dados serão usados:</b> cadastro e acompanhamento nos serviços do instituto (atendimento psicológico, jurídico e social, Círculo de Cuidado Luma e demais atividades); contato sobre atividades e atendimentos; encaminhamentos à rede de apoio, quando eu concordar; e relatórios estatísticos <b>sem identificação</b> para prestação de contas, projetos e editais.</p>
-      <p><b>2. Dados das crianças e adolescentes:</b> serão tratados no melhor interesse deles, com o meu consentimento como responsável (LGPD, art. 14).</p>
+      <p><b>2. Dados das crianças e adolescentes:</b> serão tratados no melhor interesse deles, com o consentimento de pelo menos um dos pais ou do responsável legal (LGPD, art. 14).${ele && m.responsavelLegal !== 'Sim' ? ' Como não sou o(a) responsável legal, este termo também é assinado pela mãe, pai ou responsável legal abaixo.' : ''}</p>
       <p><b>3. Compartilhamento:</b> os dados não serão vendidos nem repassados a terceiros sem minha autorização, exceto quando a lei exigir.</p>
-      <p><b>4. Guarda e segurança:</b> os dados são acessados apenas pela equipe do instituto, que tem dever de sigilo, e guardados enquanto eu for atendida e pelo prazo exigido em lei.</p>
+      <p><b>4. Guarda e segurança:</b> os dados são acessados apenas pela equipe do instituto, que tem dever de sigilo, e guardados enquanto eu for ${ele ? 'atendido(a)' : 'atendida'} e pelo prazo exigido em lei.</p>
       <p><b>5. Meus direitos:</b> posso, a qualquer momento e sem custo, pedir acesso, correção ou exclusão dos meus dados e revogar este consentimento, pelo contato ${b([c.telefone, c.email].filter(Boolean).join(' / '), 30)}.</p>
-      <p><b>6. Uso de imagem:</b> <span class="ck">${m && m.imagem === 'Autoriza' ? '✓' : ''}</span>Autorizo <span class="ck">${m && m.imagem === 'Não autoriza' ? '✓' : ''}</span>Não autorizo o uso da minha imagem e da imagem do(s) meu(s) filho(s), em fotos e vídeos das atividades, para divulgação do instituto, sem fins comerciais. Posso mudar essa escolha quando quiser.</p>
-      ${localData(m && m.lgpdData)}${assin([[m && m.nome, 'Mãe / responsável'], [c.presidente, 'Pelo ' + c.nome]])}`;
+      <p><b>6. Uso de imagem:</b> <span class="ck">${m && m.imagem === 'Autoriza' ? '✓' : ''}</span>Autorizo <span class="ck">${m && m.imagem === 'Não autoriza' ? '✓' : ''}</span>Não autorizo o uso da minha imagem e da imagem ${ele ? 'da(s) pessoa(s) sob meus cuidados' : 'do(s) meu(s) filho(s)'}, em fotos e vídeos das atividades, para divulgação do instituto, sem fins comerciais. Posso mudar essa escolha quando quiser.</p>
+      ${localData(m && m.lgpdData)}${assin([[m && m.nome, ele ? 'Cuidador(a)' : 'Mãe / responsável'], ...(ele && m.responsavelLegal !== 'Sim' ? [['', 'Mãe, pai ou responsável legal']] : []), [c.presidente, 'Pelo ' + c.nome]])}`;
   }
 
   /* ================= ações ================= */
-  const TIT = { maes: 'mãe', atend: 'atendimento', grupos: 'encontro', vol: 'voluntário', est: 'estagiário', fin: 'lançamento', bens: 'item do patrimônio' };
+  const TIT = { maes: 'mãe', cuid: 'cuidador(a)', atend: 'atendimento', grupos: 'encontro', vol: 'voluntário', est: 'estagiário', fin: 'lançamento', bens: 'item do patrimônio' };
+  const NOVO = { maes: 'Nova mãe', cuid: 'Novo(a) cuidador(a)', atend: 'Novo atendimento', grupos: 'Novo encontro', vol: 'Novo voluntário', est: 'Novo estagiário', fin: 'Novo lançamento', bens: 'Novo item do patrimônio' };
   function editar(col, item) {
+    if (col === 'maes' && isEle(item)) col = 'cuid';
     const isNew = !item.id;
-    const t = (isNew ? 'Novo ' : 'Editar ') + TIT[col];
-    openForm(cap(t), FORMS[col](), item, (v) => {
+    const t = isNew ? NOVO[col] : 'Editar ' + TIT[col];
+    const campos = col === 'cuid' ? FORMS.maes(true) : FORMS[col]();
+    openForm(t, campos, item, (v) => {
+      if (col === 'cuid') { v.publico = 'eletivo'; upsert('maes', v); return; }
       if (col === 'atend' || col === 'grupos') { if (v.maeId) v.maeNome = nomeMae(v.maeId); }
       if (col === 'bens' && !v.tomb) { D.seq.tomb = Math.max(D.seq.tomb || 0, ...D.bens.map((b) => +String(b.tomb).replace(/\D/g, '') || 0)) + 1; v.tomb = 'LUMA-' + String(D.seq.tomb).padStart(4, '0'); }
       if (col === 'est' && +v.cargaSemanal > 30 && !confirm('A Lei do Estágio limita a 30 horas semanais. Salvar mesmo assim?')) return false;
@@ -1132,6 +1179,7 @@
     const h = hoje(); const c = C();
     const base = {
       maes: { situacao: 'Ativa', entrada: h, filhos: [{}], cidade: c.cidade },
+      cuid: { situacao: 'Ativa', entrada: h, filhos: [{}], cidade: c.cidade, publico: 'eletivo' },
       atend: { data: h, status: 'Agendado', tipo: c.tiposAtend[0], modalidade: 'Presencial' },
       grupos: { data: h, tipo: c.tiposGrupo[0], status: 'Planejado', local: c.locais.find((l) => /c[ií]rculo/i.test(l)) || '' },
       vol: { situacao: 'Ativo', inicio: h },
@@ -1168,7 +1216,7 @@
     switch (act) {
       case 'new': novoItem(col, { tipo: a.dataset.tipo }); break;
       case 'edit': editar(col, JSON.parse(JSON.stringify(byId(col, id)))); break;
-      case 'del': { const it = byId(col, id); remove(col, id, TIT[col] + (it && (it.nome || it.desc || it.tema) ? ' "' + (it.nome || it.desc || it.tema) + '"' : '')); break; }
+      case 'del': { const it = byId(col, id); remove(col, id, (isEle(it) ? 'cuidador(a)' : TIT[col]) + (it && (it.nome || it.desc || it.tema) ? ' "' + (it.nome || it.desc || it.tema) + '"' : '')); break; }
       case 'realizado': case 'faltou': { const x = byId('atend', id); x.status = act === 'realizado' ? 'Realizado' : 'Faltou'; save(); render(); toast('Marcado como ' + x.status.toLowerCase()); break; }
       case 'dup': { const x = byId('fin', id); const n = JSON.parse(JSON.stringify(x)); delete n.id; delete n.reciboNum; n.comprovante = false; n.docNum = ''; const [y, m, d] = x.data.split('-'); const ym = ymAdd(y + '-' + m, 1); n.data = ym + '-' + String(Math.min(+d, +fimMes(ym).slice(8))).padStart(2, '0'); editar('fin', n); break; }
       case 'csv': {
